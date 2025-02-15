@@ -1,0 +1,86 @@
+<div class="container">
+    <p-toast position="bottom-right" dir="rtl"></p-toast>
+    
+    <p-card styleClass="shift-card">
+      <!-- Header Section -->
+      <ng-template pTemplate="header">
+        <div class="header-container">
+          <div class="title-section">
+            <h2 class="title">قائمة الورديات</h2>
+            <span class="subtitle">إدارة جداول الورديات اليومية</span>
+          </div>
+          <p-button 
+            label="إضافة وردية جديدة" 
+            icon="pi pi-plus" 
+            styleClass="p-button-success add-button"
+            [rounded]="true">
+          </p-button>
+        </div>
+      </ng-template>
+  
+      <!-- Table Section -->
+      <p-table 
+        [value]="shifts" 
+        styleClass="shift-table"
+        [tableStyle]="{ 'min-width': '50rem' }"
+        [paginator]="true" 
+        [rows]="5"
+        [showCurrentPageReport]="true"
+        [rowHover]="true"
+        currentPageReportTemplate="عرض {first} إلى {last} من أصل {totalRecords} وردية"
+        [rowsPerPageOptions]="[5,10,25]"
+        [scrollable]="true"
+        responsiveLayout="scroll">
+  
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="text-center" style="width: 5%">#</th>
+            <th class="text-right" style="width: 25%">اسم الوردية</th>
+            <th class="text-center" style="width: 20%">وقت البداية</th>
+            <th class="text-center" style="width: 20%">وقت النهاية</th>
+            <th class="text-center" style="width: 15%">الحالة</th>
+            <th class="text-center" style="width: 15%">الإجراءات</th>
+          </tr>
+        </ng-template>
+  
+        <ng-template pTemplate="body" let-shift let-i="rowIndex">
+          <tr class="shift-row">
+            <td class="text-center">{{i + 1}}</td>
+            <td class="text-right shift-name">{{shift.name}}</td>
+            <td class="text-center time-cell">
+              <i class="pi pi-clock time-icon"></i>
+              {{shift.startTime}}
+            </td>
+            <td class="text-center time-cell">
+              <i class="pi pi-clock time-icon"></i>
+              {{shift.endTime}}
+            </td>
+            <td class="text-center">
+              <p-tag 
+                [value]="shift.status === 'active' ? 'نشط' : 'غير نشط'"
+                [severity]="getStatusSeverity(shift.status)"
+                styleClass="status-tag">
+              </p-tag>
+            </td>
+            <td class="text-center action-cell">
+              <div class="action-buttons">
+                <p-button 
+                  icon="pi pi-pencil" 
+                  styleClass="p-button-rounded p-button-warning p-button-sm mr-2"
+                  pTooltip="تعديل"
+                  tooltipPosition="top">
+                </p-button>
+                <p-button 
+                  icon="pi pi-trash" 
+                  styleClass="p-button-rounded p-button-danger p-button-sm"
+                  (onClick)="deleteShift(shift)"
+                  pTooltip="حذف"
+                  tooltipPosition="top">
+                </p-button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+  </div>

@@ -1,0 +1,32 @@
+<div class="login-container">
+  <div class="surface-card p-4 shadow-2 border-round lg:w-4">
+    <div class="text-center mb-5">
+        <img src="assets/demo/images/blocks/logos/hyper.svg" alt="Image" height="50" class="mb-3">
+        <div class="text-900 text-3xl font-medium mb-3">نظام إدارة الموارد البشرية</div>
+    </div>
+
+    <app-dynamic-form
+      [fields]="fields"
+      formTitle="User Information"
+      [useCard]="false"
+      (formSubmit)="handleFormSubmit($event)"
+    ></app-dynamic-form>
+
+      <app-dynamic-button
+      [options]="{
+        label: 'تسجيل الدخول',
+        type: 'submit',
+        class: 'p-button-Submit',
+        size: 'medium',
+        disabled: false,
+        loading: isLoading
+      }"
+      (clicked)="onSubmit()"
+    ></app-dynamic-button>
+    </div>
+
+    <!-- <app-toast></app-toast> -->
+
+  </div>
+
+

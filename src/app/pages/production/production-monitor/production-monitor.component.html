@@ -1,0 +1,828 @@
+<div class="card">
+  <app-loading [show]="loading()" type="circle" message="جاري المعالجة..."></app-loading>
+
+  <p-toast position="top-center"></p-toast>
+  <p-confirmDialog [style]="{width: '450px'}" acceptLabel="نعم" rejectLabel="لا"></p-confirmDialog>
+
+
+
+<!-- Statistics Dashboard -->
+<div class="grid mb-4">
+  <div class="col-12">
+    <!-- Main Stats Cards -->
+    <div class="grid">
+      <!-- General Stats -->
+      <div class="col-12 lg:col-8">
+        <div class="card h-full">
+          <div class="flex justify-content-between align-items-center border-bottom-1 surface-border pb-3 mb-4">
+            <div>
+              <div class="flex align-items-center mb-2">
+                <div class="flex align-items-center justify-content-center surface-50 border-round mr-2 shadow-1" 
+                     style="width: 2.5rem; height: 2.5rem">
+                  <i class="pi pi-chart-bar text-xl text-primary"></i>
+                </div>
+                <h5 class="text-xl m-0 font-medium">إحصائيات اليوم</h5>
+              </div>
+              <p class="text-600 font-medium m-0">{{ (dailyStats$ | async)?.date | date:'yyyy-MM-dd' }}</p>
+            </div>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="grid">
+            <!-- Total Quantity -->
+            <div class="col-12 md:col-6 xl:col-3">
+              <div *ngIf="stats?.general_statistics?.total_quantity; else noData" class="surface-50 border-round-xl p-3 h-full shadow-1">
+                <div class="flex align-items-center justify-content-between mb-3">
+                  <span class="text-700 font-medium">إجمالي الكمية</span>
+                  <i class="pi pi-box text-primary text-xl"></i>
+                </div>
+                <div class="text-900 font-bold text-2xl mb-2">{{ stats?.general_statistics?.total_quantity }}</div>
+                <div class="text-500">الكمية الإجمالية المنتجة</div>
+              </div>
+              <ng-template #noData>
+                <div class="surface-50 border-round-xl p-3 h-full shadow-1">
+                  <div class="flex justify-content-center align-items-center">
+                    <i class="pi pi-info-circle text-4xl text-500"></i>
+                    <span class="ml-2 text-600">لا توجد بيانات لعرضها في هذا القسم</span>
+                  </div>
+                </div>
+              </ng-template>
+            </div>
+
+            <!-- Total Employees -->
+            <div class="col-12 md:col-6 xl:col-3">
+              <div *ngIf="stats?.general_statistics?.total_employees; else noData" class="surface-50 border-round-xl p-3 h-full shadow-1">
+                <div class="flex align-items-center justify-content-between mb-3">
+                  <span class="text-700 font-medium">عدد الموظفين</span>
+                  <i class="pi pi-users text-primary text-xl"></i>
+                </div>
+                <div class="text-900 font-bold text-2xl mb-2">{{ stats?.general_statistics?.total_employees }}</div>
+                <div class="text-500">الموظفين النشطين اليوم</div>
+              </div>
+              <ng-template #noData>
+                <div class="surface-50 border-round-xl p-3 h-full shadow-1">
+                  <div class="flex justify-content-center align-items-center">
+                    <i class="pi pi-info-circle text-4xl text-500"></i>
+                    <span class="ml-2 text-600">لا توجد بيانات لعرضها في هذا القسم</span>
+                  </div>
+                </div>
+              </ng-template>
+            </div>
+
+            <!-- Average Per Employee -->
+            <div class="col-12 md:col-6 xl:col-3">
+              <div *ngIf="stats?.general_statistics?.average_quantity_per_employee; else noData" class="surface-50 border-round-xl p-3 h-full shadow-1">
+                <div class="flex align-items-center justify-content-between mb-3">
+                  <span class="text-700 font-medium">متوسط الإنتاج</span>
+                  <i class="pi pi-chart-line text-primary text-xl"></i>
+                </div>
+                <div class="text-900 font-bold text-2xl mb-2">{{ stats?.general_statistics?.average_quantity_per_employee | number:'1.0-1' }}</div>
+                <div class="text-500">متوسط الإنتاج لكل موظف</div>
+              </div>
+              <ng-template #noData>
+                <div class="surface-50 border-round-xl p-3 h-full shadow-1">
+                  <div class="flex justify-content-center align-items-center">
+                    <i class="pi pi-info-circle text-4xl text-500"></i>
+                    <span class="ml-2 text-600">لا توجد بيانات لعرضها في هذا القسم</span>
+                  </div>
+                </div>
+              </ng-template>
+            </div>
+
+            <!-- Efficiency Score -->
+            <div class="col-12 md:col-6 xl:col-3">
+              <div *ngIf="stats?.productivity_metrics?.efficiency_score; else noData" class="surface-50 border-round-xl p-3 h-full shadow-1">
+                <div class="flex align-items-center justify-content-between mb-3">
+                  <span class="text-700 font-medium">معدل الكفاءة</span>
+                  <i class="pi pi-star text-primary text-xl"></i>
+                </div>
+                <div class="text-900 font-bold text-2xl mb-2">{{ stats?.productivity_metrics?.efficiency_score | number:'1.0-1' }}%</div>
+                <div class="text-500">مؤشر الكفاءة العام</div>
+              </div>
+              <ng-template #noData>
+                <div class="surface-50 border-round-xl p-3 h-full shadow-1">
+                  <div class="flex justify-content-center align-items-center">
+                    <i class="pi pi-info-circle text-4xl text-500"></i>
+                    <span class="ml-2 text-600">لا توجد بيانات لعرضها في هذا القسم</span>
+                  </div>
+                </div>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quality Distribution -->
+      <div class="col-12 lg:col-4">
+        <div class="card h-full">
+          <div class="flex align-items-center justify-content-between mb-4">
+            <h5 class="text-xl m-0">توزيع مستويات الجودة</h5>
+            <i class="pi pi-shield text-primary text-xl"></i>
+          </div>
+          
+          <div class="flex flex-column gap-3">
+            <div *ngIf="stats?.general_statistics?.total_quantity == 0; else qualityData" 
+                  class="surface-50 border-round-xl p-3">
+              <div class="flex justify-content-center align-items-center">
+                <i class="pi pi-exclamation-circle text-4xl text-500"></i>
+                <span class="ml-2 text-600">لا توجد بيانات للجودة لعرضها</span>
+              </div>
+            </div>
+            <ng-template #qualityData>
+              <div *ngFor="let quality of stats?.quality_distribution | keyvalue" 
+                   class="surface-50 border-round-xl p-3">
+                <div class="flex align-items-center justify-content-between mb-2">
+                  <span class="text-700">{{ getQualityTag(quality.key).value }}</span>
+                  <p-tag [severity]="getQualityTag(quality.key).severity">{{ quality.value.percentage_of_total | number:'1.0-1' }}%</p-tag>
+                </div>
+                <div class="flex align-items-center gap-3">
+                  <div>
+                    <small class="text-500 block">الكمية</small>
+                    <span class="font-medium">{{ quality.value.quantity }}</span>
+                  </div>
+                  <div>
+                    <small class="text-500 block">المتوسط</small>
+                    <span class="font-medium">{{ quality.value.average_quantity | number:'1.0-1' }}</span>
+                  </div>
+                  <div>
+                    <small class="text-500 block">السجلات</small>
+                    <span class="font-medium">{{ quality.value.records_count }}</span>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Performers and Pieces -->
+    <div class="grid mt-4">
+      <!-- Top Performers -->
+      <div class="col-12 lg:col-6">
+        <div class="card">
+          <div class="flex align-items-center justify-content-between mb-4">
+            <h5 class="text-xl m-0">أفضل الموظفين أداءً</h5>
+            <i class="pi pi-users text-primary text-xl"></i>
+          </div>
+          
+          <div class="flex flex-column gap-3">
+            <div *ngIf="stats?.top_performers?.length === 0; else performersData" 
+                 class="surface-50 border-round-xl p-3">
+              <div class="flex justify-content-center align-items-center">
+                <i class="pi pi-exclamation-circle text-4xl text-500"></i>
+                <span class="ml-2 text-600">لا توجد بيانات لأفضل الموظفين</span>
+              </div>
+            </div>
+            <ng-template #performersData>
+              <div *ngFor="let employee of stats?.top_performers; let i = index" 
+                   class="surface-50 border-round-xl p-3">
+                <div class="flex align-items-center justify-content-between mb-2">
+                  <div class="flex align-items-center gap-2">
+                    <div class="flex align-items-center justify-content-center bg-primary border-round-xl" 
+                         style="width: 2rem; height: 2rem">
+                      <span class="text-white font-medium">{{i + 1}}</span>
+                    </div>
+                    <span class="font-medium">{{ employee.name }}</span>
+                  </div>
+                  <span class="text-primary font-medium">{{ employee.total_quantity }}</span>
+                </div>
+                <div class="flex align-items-center gap-3 text-500">
+                  <small>المتوسط: {{ employee.average_quantity | number:'1.0-1' }}</small>
+                  <small>عدد السجلات: {{ employee.records_count }}</small>
+                </div>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Pieces -->
+      <div class="col-12 lg:col-6">
+        <div class="card">
+          <div class="flex align-items-center justify-content-between mb-4">
+            <h5 class="text-xl m-0">القطع الأكثر إنتاجاً</h5>
+            <i class="pi pi-box text-primary text-xl"></i>
+          </div>
+          
+          <div class="flex flex-column gap-3">
+            <div *ngIf="stats?.top_pieces?.length === 0; else piecesData" 
+                 class="surface-50 border-round-xl p-3">
+              <div class="flex justify-content-center align-items-center">
+                <i class="pi pi-exclamation-circle text-4xl text-500"></i>
+                <span class="ml-2 text-600">لا توجد بيانات للقطع الأكثر إنتاجاً</span>
+              </div>
+            </div>
+            <ng-template #piecesData>
+              <div *ngFor="let piece of stats?.top_pieces; let i = index" 
+                   class="surface-50 border-round-xl p-3">
+                <div class="flex align-items-center justify-content-between mb-2">
+                  <div class="flex align-items-center gap-2">
+                    <div class="flex align-items-center justify-content-center bg-primary border-round-xl" 
+                         style="width: 2rem; height: 2rem">
+                      <span class="text-white font-medium">{{i + 1}}</span>
+                    </div>
+                    <span class="font-medium">{{ piece.name }}</span>
+                  </div>
+                  <span class="text-primary font-medium">{{ piece.total_quantity }}</span>
+                </div>
+                <div class="flex align-items-center gap-3 text-500">
+                  <small>المتوسط: {{ piece.average_quantity | number:'1.0-1' }}</small>
+                  <small>عدد السجلات: {{ piece.records_count }}</small>
+                </div>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div *ngIf="!loading() && !stats" class="card">
+  <div class="flex flex-column align-items-center p-5">
+    <i class="pi pi-chart-bar text-6xl text-500 mb-4"></i>
+    <span class="text-700">لا توجد إحصائيات متاحة</span>
+    <button pButton 
+            label="تحديث" 
+            icon="pi pi-refresh" 
+            class="p-button-outlined mt-3"
+            (click)="refreshStats()"></button>
+  </div>
+</div>
+
+   <!-- Filter Section -->
+   <div class="card mb-4">
+    <div class="p-fluid grid">
+      <div class="col-12 md:col-4">
+        <div class="field">
+          <label for="start_date">من تاريخ</label>
+          <p-calendar [(ngModel)]="filterModel.start_date" 
+                    [showIcon]="true" 
+                    inputId="start_date"
+                    [maxDate]="filterModel.end_date"
+                    dateFormat="yy-mm-dd"></p-calendar>
+        </div>
+      </div>
+      <div class="col-12 md:col-4">
+        <div class="field">
+          <label for="end_date">إلى تاريخ</label>
+          <p-calendar [(ngModel)]="filterModel.end_date" 
+                    [showIcon]="true" 
+                    inputId="end_date"
+                    [minDate]="filterModel.start_date"
+                    dateFormat="yy-mm-dd"></p-calendar>
+        </div>
+      </div>
+      <div class="col-12 md:col-4">
+        <div class="field">
+          <label for="employee">الموظف</label>
+          <p-dropdown [options]="employees" 
+                    [(ngModel)]="filterModel.employee_id"
+                    optionLabel="full_name"
+                    optionValue="id"
+                    [showClear]="true"
+                    placeholder="اختر الموظف"
+                    inputId="employee"></p-dropdown>
+        </div>
+      </div>
+      <div class="col-12 flex justify-content-end gap-2">
+        <button pButton 
+                label="تطبيق" 
+                icon="pi pi-search"
+                class="p-button-info" 
+                (click)="applyFilter()"
+                [disabled]="loading()"></button>
+        <button pButton 
+                label="إعادة ضبط" 
+                icon="pi pi-refresh"
+                class="p-button-secondary" 
+                (click)="resetFilter()"
+                [disabled]="loading()"></button>
+     
+                <button pButton 
+                icon="pi pi-plus" 
+                label="إضافة سجل" 
+                class="p-button-success mr-2" 
+                (click)="openNew()"
+                [disabled]="loading()"></button>
+        <button pButton 
+                icon="pi pi-file-excel" 
+                label="تصدير" 
+                class="p-button-help" 
+                (click)="exportData()"
+                [disabled]="loading() || !records().length"></button>
+
+      </div>
+     
+
+    </div>
+  </div>
+
+  <!-- Data Table -->
+  <p-table [value]="groupedRecords" 
+         [paginator]="true" 
+         [rows]="10"
+         [showCurrentPageReport]="true"
+         [tableStyle]="{ width: '100%' }"
+         [loading]="loading()"
+         styleClass="p-datatable-striped"
+         dataKey="employee.id"
+         [expandedRowKeys]="expandedRows">
+
+    <!-- الجدول الرئيسي -->
+    <ng-template pTemplate="header">
+        <tr>
+            <th style="width: 5%; text-align: center"></th>
+            <th style="width: 50%; text-align: center;">الموظف</th>
+            <th style="width: 25%; text-align: center;">المجموع الكلي</th>
+            <th style="width: 20%; text-align: center">الإجراءات</th>
+        </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-record let-expanded="expanded">
+        <tr>
+            <td style="text-align: center; ">
+                <button type="button" 
+                        pButton 
+                        [pTooltip]="expanded ? 'إخفاء التفاصيل' : 'عرض التفاصيل'"
+                        class="p-button-text p-button-rounded p-button-plain" 
+                        [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                        (click)="toggleRow(record)">
+                </button>
+            </td>
+            <td style="text-align: center; ">
+                <span class="font-bold">{{ record.employee.full_name }}</span>
+            </td>
+            <td style="text-align: center; ">
+                <span class="text-primary font-bold text-xl">{{ record.totalQuantity }}</span>
+            </td>
+            <td style="text-align: center">
+                <button pButton 
+                        icon="pi pi-chart-line" 
+                        class="p-button-rounded p-button-info p-button-text"
+                        (click)="showEmployeeStats(record.employee, null)"
+                        [disabled]="loading()"
+                        pTooltip="إحصائيات">
+                </button>
+            </td>
+        </tr>
+    </ng-template>
+
+    <!-- تفاصيل السجلات -->
+    <ng-template pTemplate="rowexpansion" let-record>
+        <tr>
+            <td colspan="4" class="p-0">
+                <div class="p-3 surface-ground">
+                    <p-table [value]="record.pieces" 
+                            styleClass="p-datatable-sm"
+                            [tableStyle]="{ width: '100%' }">
+                        <ng-template pTemplate="header">
+                            <tr>
+                                <th style="width: 20%; text-align: center; border-right: 1px solid #dee2e6">القطعة</th>
+                                <th style="width: 15%; text-align: center; border-right: 1px solid #dee2e6">الكمية الإجمالية</th>
+                                <th style="width: 25%; text-align: center; border-right: 1px solid #dee2e6">تفاصيل الجودة</th>
+                                <th style="width: 15%; text-align: center; border-right: 1px solid #dee2e6">التاريخ</th>
+                                <th style="width: 15%; text-align: center; border-right: 1px solid #dee2e6">ملاحظات</th>
+                                <th style="width: 10%; text-align: center">الإجراءات</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template pTemplate="body" let-piece>
+                            <tr class="surface-card">
+                                <td style="text-align: center; border-right: 1px solid #dee2e6">
+                                    <span class="font-medium">{{ piece.piece.piece_name }}</span>
+                                </td>
+                                <td style="text-align: center; border-right: 1px solid #dee2e6">
+                                    <span class="text-primary font-bold">{{ piece.totalQuantity }}</span>
+                                </td>
+                                <td style="text-align: center; border-right: 1px solid #dee2e6">
+                                    <div class="flex flex-wrap gap-2 justify-content-center">
+                                        <p-tag *ngFor="let quality of piece.qualityBreakdown"
+                                              [severity]="getQualityTag(quality.grade).severity"
+                                              [value]="quality.quantity + ' ' + getQualityTag(quality.grade).value"
+                                              styleClass="p-tag-sm">
+                                        </p-tag>
+                                    </div>
+                                </td>
+                                <td style="text-align: center; border-right: 1px solid #dee2e6">
+                                    <span class="text-600">{{ piece.date | date:'yyyy-MM-dd' }}</span>
+                                </td>
+                                <td style="text-align: center; border-right: 1px solid #dee2e6">
+                                    <div class="text-overflow-ellipsis" [pTooltip]="piece.notes" 
+                                         *ngIf="piece.notes" style="max-width: 150px; margin: 0 auto">
+                                        {{ piece.notes }}
+                                    </div>
+                                    <span class="text-500" *ngIf="!piece.notes">-</span>
+                                </td>
+                                <td style="text-align: center">
+                                    <div class="flex gap-2 justify-content-center">
+                                        <button pButton 
+                                                icon="pi pi-pencil" 
+                                                class="p-button-rounded p-button-success p-button-text p-button-sm"
+                                                (click)="editPieceRecord(record.employee, piece)"
+                                                [disabled]="loading()"
+                                                pTooltip="تعديل">
+                                        </button>
+                                        <button pButton 
+                                                icon="pi pi-trash" 
+                                                class="p-button-rounded p-button-danger p-button-text p-button-sm"
+                                                (click)="deletePieceRecord(record.employee, piece)"
+                                                [disabled]="loading()"
+                                                pTooltip="حذف">
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<!-- 
+  <p-table [value]="records()" 
+           [paginator]="true" 
+           [rows]="10"
+           [showCurrentPageReport]="true"
+           [tableStyle]="{ 'min-width': '50rem' }"
+           [loading]="loading()"
+           styleClass="p-datatable-striped"
+           currentPageReportTemplate="إجمالي السجلات: {totalRecords}"
+           [rowsPerPageOptions]="[10,25,50]">
+    
+    <ng-template pTemplate="header">
+      <tr>
+        <th>الموظف</th>
+        <th>القطعة</th>
+        <th>الكمية</th>
+        <th>الجودة</th>
+        <th>التاريخ</th>
+        <th>ملاحظات</th>
+        <th>الإجراءات</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-record>
+      <tr>
+        <td>
+          {{ record.employee?.name }}
+        </td>
+        <td>{{ record.piece?.name }}</td>
+        <td>{{ record.quantity }}</td>
+        <td>
+          <p-tag [severity]="getQualityTag(record.quality_grade).severity" 
+                 [value]="getQualityTag(record.quality_grade).value">
+          </p-tag>
+        </td>
+        <td>{{ record.date | date:'yyyy-MM-dd' }}</td>
+        <td>{{ record.notes }}</td>
+        <td>
+          <div class="flex gap-2">
+            <button pButton 
+                  icon="pi pi-chart-line" 
+                  class="p-button-rounded p-button-info p-button-text"
+                  (click)="showEmployeeStats(record.employee , record.date)"
+                  [disabled]="loading()"
+                  pTooltip="إحصائيات"></button>
+
+            <button pButton 
+                    icon="pi pi-pencil" 
+                    class="p-button-rounded p-button-success p-button-text"
+                    (click)="openEdit(record)"
+                    [disabled]="loading()"
+                    pTooltip="تعديل"></button>
+            <button pButton 
+                    icon="pi pi-trash" 
+                    class="p-button-rounded p-button-danger p-button-text"
+                    (click)="deleteRecord(record)"
+                    [disabled]="loading()"
+                    pTooltip="حذف"></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="7" class="text-center p-4">لا توجد سجلات</td>
+      </tr>
+    </ng-template>
+  </p-table> -->
+
+
+  <!-- Add/Edit Dialog -->
+  <p-dialog [(visible)]="displayDialog" 
+            [style]="{ width: '450px' }" 
+            [header]="dialogMode === 'add' ? 'إضافة سجل جديد' : 'تعديل السجل'"
+            [modal]="true"
+            styleClass="p-fluid">
+
+    <div class="grid">
+      <div class="col-12">
+        <div class="field">
+          <label for="employee">الموظف*</label>
+          <p-dropdown [options]="employees" 
+                     [(ngModel)]="recordModel.employee_id"
+                     optionLabel="full_name"
+                     optionValue="id"
+                     placeholder="اختر الموظف"
+                     [filter]="true"
+                     filterBy="full_name"
+                     [showClear]="true"
+                     inputId="employee"></p-dropdown>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="field">
+          <label for="piece">القطعة*</label>
+          <p-dropdown [options]="pieces" 
+                     [(ngModel)]="recordModel.piece_id"
+                     optionLabel="piece_name"
+                     optionValue="id"
+                     placeholder="اختر القطعة"
+                     [filter]="true"
+                     filterBy="piece_name"
+                     [showClear]="true"
+                     inputId="piece"></p-dropdown>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="field">
+          <label for="quantity">الكمية*</label>
+          <p-inputNumber [(ngModel)]="recordModel.quantity" 
+                       [min]="0" 
+                       [showButtons]="true"
+                       buttonLayout="horizontal"
+                       spinnerMode="horizontal"
+                       inputId="quantity"
+                       [step]="1"></p-inputNumber>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="field">
+          <label for="quality">مستوى الجودة*</label>
+          <p-dropdown [options]="qualityGrades" 
+                     [(ngModel)]="recordModel.quality_grade"
+                     placeholder="اختر مستوى الجودة"
+                     inputId="quality"></p-dropdown>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="field">
+          <label for="date">التاريخ*</label>
+          <p-calendar [(ngModel)]="recordModel.date" 
+                     [showIcon]="true"
+                     dateFormat="yy-mm-dd"
+                     inputId="date"></p-calendar>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="field">
+          <label for="notes">ملاحظات</label>
+          <textarea pInputTextarea 
+                    [(ngModel)]="recordModel.notes" 
+                    rows="3" 
+                    placeholder="أدخل الملاحظات هنا"
+                    inputId="notes"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton 
+              label="حفظ" 
+              icon="pi pi-check" 
+              class="p-button-success" 
+              (click)="saveRecord()"
+              [disabled]="loading()"></button>
+      <button pButton 
+              label="إلغاء" 
+              icon="pi pi-times" 
+              class="p-button-secondary" 
+              (click)="displayDialog = false"
+              [disabled]="loading()"></button>
+    </ng-template>
+  </p-dialog>
+
+
+  <!-- Piece Edit Dialog -->
+  <p-dialog [(visible)]="displayPieceEditDialog"
+            [style]="{ width: '600px' }"
+            [header]="'تعديل إنتاج القطعة'"
+            [modal]="true"
+            styleClass="p-fluid">
+      
+      <div class="grid" *ngIf="editingPieceModel">
+          <!-- معلومات أساسية -->
+          <div class="col-12">
+              <div class="surface-50 border-round p-3 mb-3">
+                  <div class="flex align-items-center gap-2 mb-2">
+                      <i class="pi pi-user text-primary"></i>
+                      <span class="font-bold">معلومات الموظف:</span>
+                  </div>
+                  <div class="text-lg ml-4">{{ selectedEmployee?.full_name }}</div>
+              </div>
+          </div>
+
+          <!-- اختيار القطعة -->
+          <div class="col-12">
+              <div class="surface-50 border-round p-3 mb-3">
+                  <div class="flex align-items-center justify-content-between mb-3">
+                      <div class="flex align-items-center gap-2">
+                          <i class="pi pi-box text-primary"></i>
+                          <span class="font-bold">القطعة:</span>
+                      </div>
+                  </div>
+                  <p-dropdown [options]="pieces"
+                            [(ngModel)]="editingPieceModel.pieceId"
+                            optionLabel="piece_name"
+                            optionValue="id"
+                            [filter]="true"
+                            filterBy="piece_name"
+                            placeholder="اختر القطعة"
+                            styleClass="w-full">
+                      <ng-template pTemplate="selectedItem">
+                          <div class="flex align-items-center gap-2" *ngIf="getSelectedPiece()">
+                              <span>{{ getSelectedPiece()?.piece_name }}</span>
+                          </div>
+                      </ng-template>
+                      <ng-template pTemplate="item" let-piece>
+                          <div class="flex align-items-center gap-2">
+                              <span>{{ piece.piece_name }}</span>
+                          </div>
+                      </ng-template>
+                  </p-dropdown>
+              </div>
+          </div>
+
+          <!-- تفاصيل الجودة -->
+          <div class="col-12">
+              <div class="surface-50 border-round p-3">
+                  <div class="flex align-items-center justify-content-between mb-3">
+                      <div class="flex align-items-center gap-2">
+                          <i class="pi pi-star text-primary"></i>
+                          <span class="font-bold">تفاصيل الجودة</span>
+                      </div>
+                      <button pButton
+                              icon="pi pi-plus"
+                              label="إضافة مستوى جودة"
+                              class="p-button-outlined p-button-sm"
+                              (click)="addQualityLevel()">
+                      </button>
+                  </div>
+
+                  <div class="grid">
+                      <div class="col-12 mb-2" *ngFor="let quality of qualityEditList; let i = index">
+                          <div class="flex align-items-center gap-3 surface-100 p-3 border-round">
+                              <!-- اختيار مستوى الجودة -->
+                              <p-dropdown [options]="qualityGrades"
+                                        [(ngModel)]="quality.grade"
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        [style]="{'width': '150px'}"
+                                        (onChange)="onQualityGradeChange(i)">
+                              </p-dropdown>
+
+                              <!-- إدخال الكمية -->
+                              <p-inputNumber [(ngModel)]="quality.quantity"
+                                          [min]="0"
+                                          [showButtons]="true"
+                                          buttonLayout="horizontal"
+                                          spinnerMode="horizontal"
+                                          [inputStyle]="{'width': '120px'}"
+                                          placeholder="الكمية"
+                                          [step]="1">
+                              </p-inputNumber>
+
+                              <!-- زر الحذف -->
+                              <button pButton
+                                      icon="pi pi-trash"
+                                      class="p-button-danger p-button-text p-button-rounded"
+                                      (click)="removeQualityLevel(i)"
+                                      [disabled]="qualityEditList.length === 1">
+                              </button>
+                          </div>
+
+                          <div class="w-full">
+                            <textarea pInputTextarea 
+                                     [(ngModel)]="quality.notes"
+                                     rows="2"
+                                     placeholder="ملاحظات"
+                                     class="w-full">
+                            </textarea>
+                        </div>
+
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+          <!-- إجمالي الكمية -->
+          <div class="col-12 mt-3">
+              <div class="surface-card border-round p-3">
+                  <div class="flex justify-content-between align-items-center">
+                      <span class="font-bold">إجمالي الكمية:</span>
+                      <span class="text-xl text-primary font-bold">
+                          {{ calculateTotalQuantity() }}
+                      </span>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <ng-template pTemplate="footer">
+          <button pButton
+                  label="حفظ"
+                  icon="pi pi-check"
+                  class="p-button-success"
+                  (click)="savePieceEdit()"
+                  [disabled]="loading()">
+          </button>
+          <button pButton
+                  label="إلغاء"
+                  icon="pi pi-times"
+                  class="p-button-secondary"
+                  (click)="cancelPieceEdit()"
+                  [disabled]="loading()">
+          </button>
+      </ng-template>
+  </p-dialog>
+
+
+  <!-- Employee Statistics Dialog -->
+  <p-dialog [(visible)]="showStatsDialog" 
+          [modal]="true"
+          styleClass="stats-dialog dark-theme"
+          [style]="{ width: '500px' }">
+          
+  <ng-template pTemplate="header">
+    <div class="flex align-items-center justify-content-between w-full">
+      <div class="flex align-items-center gap-2">
+        <div class="bg-primary border-round p-2">
+          <i class="pi pi-user text-white"></i>
+        </div>
+        <span>إحصائيات الموظف</span>
+      </div>
+      
+    </div>
+  </ng-template>
+
+  <div class="p-3" *ngIf="selectedEmployeeStats">
+    <!-- Main Stats -->
+    <div class="grid mb-4">
+      <!-- Average Production -->
+      <div class="col-6">
+        <div class="text-center">
+          <div class="flex align-items-center justify-content-center mb-2">
+            <i class="pi pi-chart-line text-primary mr-2"></i>
+            <span>معدل الإنتاج</span>
+          </div>
+          <div class="text-3xl text-primary">
+            {{ selectedEmployeeStats.statistics.average_quantity | number:'1.0-1' }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Production -->
+      <div class="col-6">
+        <div class="text-center">
+          <div class="flex align-items-center justify-content-center mb-2">
+            <i class="pi pi-box text-primary mr-2"></i>
+            <span>إجمالي الإنتاج</span>
+          </div>
+          <div class="text-3xl text-primary">
+            {{ selectedEmployeeStats.statistics.total_quantity }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quality Distribution -->
+    <div class="mt-4">
+      <div class="mb-2 flex align-items-center">
+        <i class="pi pi-star-fill text-primary mr-2"></i>
+        <span>توزيع مستويات الجودة</span>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <ng-container *ngFor="let grade of selectedEmployeeStats.statistics.quality_distribution | keyvalue">
+          <div class="surface-hover border-round p-2 flex align-items-center" 
+               [ngStyle]="{'background-color': getQualityBackgroundColor(grade.key)}">
+            <span>{{ getQualityTag(grade.key).value }}: </span>
+            <span class="ml-2 font-bold">{{ grade.value }}</span>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</p-dialog>
+
+</div>

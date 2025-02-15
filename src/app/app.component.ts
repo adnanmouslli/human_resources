@@ -1,11 +1,12 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Inject, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { ToastComponent } from "./components/ui/toast/toast.component";
+import { ToastModule } from 'primeng/toast';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet],
+  imports: [RouterOutlet, ToastComponent, ToastModule] ,
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

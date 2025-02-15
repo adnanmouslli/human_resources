@@ -1,0 +1,96 @@
+.card {
+  border: 1px solid rgba(0,0,0,.125);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,.1);
+}
+
+// Table Styling
+.table {
+  --bs-table-hover-bg: rgba(0,0,0,.02);
+  
+  th {
+    font-weight: 600;
+    color: #495057;
+  }
+  
+  td {
+    vertical-align: middle;
+  }
+}
+
+// Input Group Styling
+.input-group {
+  .input-group-text {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+  }
+  
+  .form-control {
+    border-color: #dee2e6;
+    
+    &:focus {
+      box-shadow: none;
+      border-color: #86b7fe;
+    }
+  }
+}
+
+// Button Styling
+.btn-outline-secondary {
+  border-color: #dee2e6;
+  color: #6c757d;
+  
+  &:hover {
+    background-color: #f8f9fa;
+    color: #495057;
+  }
+}
+
+// Dropdown Menu
+.dropdown-menu {
+  box-shadow: 0 2px 4px rgba(0,0,0,.1);
+  border: 1px solid #dee2e6;
+}
+
+// Pagination
+.pagination {
+  .page-link {
+    color: #6c757d;
+    border-color: #dee2e6;
+    
+    &:hover {
+      background-color: #f8f9fa;
+      color: #495057;
+    }
+  }
+  
+  .page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+  }
+}
+
+// Action Buttons
+.btn-group {
+  .btn {
+    padding: 0.25rem 0.5rem;
+    
+    &:hover {
+      background-color: #f8f9fa;
+    }
+    
+    i {
+      font-size: 1rem;
+    }
+  }
+}
+
+// Form Select
+.form-select {
+  border-color: #dee2e6;
+  
+  &:focus {
+    box-shadow: none;
+    border-color: #86b7fe;
+  }
+}

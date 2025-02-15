@@ -1,0 +1,433 @@
+<div class="attendance-page">
+    <!-- إحصائيات سريعة -->
+    <div class="grid mb-4">
+      <div class="col-12 md:col-3">
+        <p-card styleClass="stats-card">
+          <div class="flex align-items-center">
+            <i class="pi pi-user-plus text-green-500 text-4xl mr-3"></i>
+            <div>
+              <h3 class="m-0">{{stats.present}}</h3>
+              <span class="text-600">الحضور اليوم</span>
+            </div>
+          </div>
+        </p-card>
+      </div>
+      <div class="col-12 md:col-3">
+        <p-card styleClass="stats-card">
+          <div class="flex align-items-center">
+            <i class="pi pi-clock text-yellow-500 text-4xl mr-3"></i>
+            <div>
+              <h3 class="m-0">{{stats.late}}</h3>
+              <span class="text-600">المتأخرين</span>
+            </div>
+          </div>
+        </p-card>
+      </div>
+      <div class="col-12 md:col-3">
+        <p-card styleClass="stats-card">
+          <div class="flex align-items-center">
+            <i class="pi pi-times-circle text-red-500 text-4xl mr-3"></i>
+            <div>
+              <h3 class="m-0">{{stats.absent}}</h3>
+              <span class="text-600">الغائبين</span>
+            </div>
+          </div>
+        </p-card>
+      </div>
+      <div class="col-12 md:col-3">
+        <p-card styleClass="stats-card">
+          <div class="flex align-items-center">
+            <i class="pi pi-users text-blue-500 text-4xl mr-3"></i>
+            <div>
+              <h3 class="m-0">{{stats.total}}</h3>
+              <span class="text-600">إجمالي الموظفين</span>
+            </div>
+          </div>
+        </p-card>
+      </div>
+    </div>
+
+ 
+<!-- نافذة تأكيد الحضور -->
+<p-dialog 
+[(visible)]="showCheckInDialog" 
+[modal]="true"
+[style]="{width: '400px'}"
+header="تأكيد تسجيل الحضور">
+<div class="flex flex-column align-items-center p-4">
+  <i class="pi pi-clock text-4xl text-primary mb-3"></i>
+  <h2 class="text-2xl font-bold mb-2">{{selectedRecord?.employee?.name}}</h2>
+  <h3 class="text-xl mb-3">وقت الحضور</h3>
+  <div class="text-4xl font-bold text-primary mb-4">{{currentDateTime}}</div>
+  <p class="text-center text-600 mb-4">
+    هل تريد تأكيد تسجيل الحضور في هذا الوقت؟
+  </p>
+</div>
+<ng-template pTemplate="footer">
+  <button 
+    pButton 
+    icon="pi pi-times" 
+    label="إلغاء" 
+    class="p-button-text"
+    (click)="showCheckInDialog = false">
+  </button>
+  <button 
+    pButton 
+    icon="pi pi-check" 
+    label="تأكيد" 
+    class="p-button-success"
+    (click)="confirmCheckIn()">
+  </button>
+</ng-template>
+</p-dialog>
+
+<!-- نافذة تسجيل الحضور الخارجي -->
+<p-dialog 
+  [(visible)]="showAddAttendanceDialog" 
+  header="تسجيل حضور" 
+  [modal]="true" 
+  [closable]="true" 
+  [style]="{ width: '30vw' }">
+  
+  <div class="flex flex-column gap-4">
+    <!-- حالة وجود موظفين -->
+    <ng-container *ngIf="employees.length > 0; else noEmployeesTemplate">
+      <p-dropdown 
+        [(ngModel)]="selectedEmployee" 
+        [options]="employees" 
+        optionLabel="full_name" 
+        placeholder="اختر الموظف">
+      </p-dropdown>
+      <p-calendar 
+        [(ngModel)]="selectedAttendanceTime" 
+        [timeOnly]="true" 
+        [showIcon]="true" 
+        placeholder="اختر وقت الحضور">
+      </p-calendar>
+      <div class="flex justify-content-end gap-2">
+        <button 
+          pButton 
+          label="إلغاء" 
+          class="p-button-text" 
+          (click)="cancelAddAttendance()">
+        </button>
+        <button 
+          pButton 
+          label="تسجيل" 
+          class="p-button-primary" 
+          (click)="confirmAddAttendance()">
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- حالة عدم وجود موظفين -->
+    <ng-template #noEmployeesTemplate>
+      <div class="flex flex-column align-items-center justify-content-center gap-3">
+        <i class="pi pi-info-circle text-secondary" style="font-size: 2rem;"></i>
+        <p class="text-center text-secondary font-bold">تم تسجيل حضور جميع الموظفين</p>
+        <button 
+          pButton 
+          label="إغلاق" 
+          class="p-button-text" 
+          (click)="cancelAddAttendance()">
+        </button>
+      </div>
+    </ng-template>
+  </div>
+</p-dialog>
+
+
+<!-- نافذة تأكيد الانصراف -->
+<p-dialog 
+[(visible)]="showCheckOutDialog" 
+[modal]="true"
+[style]="{width: '400px'}"
+header="تسجيل الانصراف">
+<div class="flex flex-column align-items-center p-4">
+  <i class="pi pi-clock text-4xl text-primary mb-3"></i>
+  <h2 class="text-2xl font-bold mb-2">{{selectedRecord?.employee?.name}}</h2>
+  <h3 class="text-xl mb-3">وقت الانصراف</h3>
+  <div class="text-4xl font-bold text-primary mb-4">{{currentDateTime}}</div>
+  
+  <div *ngIf="isProductivityBased" class="w-full mb-4">
+    <label class="block text-900 font-medium mb-2">كمية الإنتاج اليوم:</label>
+    <p-inputNumber 
+      [(ngModel)]="productivityAmount"
+      [showButtons]="true"
+      buttonLayout="horizontal"
+      spinnerMode="horizontal"
+      [min]="0"
+      [step]="1"
+      class="w-full"
+      placeholder="أدخل كمية الإنتاج">
+    </p-inputNumber>
+  </div>
+  
+  <p class="text-center text-600 mb-4">
+    هل تريد تأكيد تسجيل الانصراف؟
+  </p>
+</div>
+<ng-template pTemplate="footer">
+  <button 
+    pButton 
+    icon="pi pi-times" 
+    label="إلغاء" 
+    class="p-button-text"
+    (click)="showCheckOutDialog = false">
+  </button>
+  <button 
+    pButton 
+    icon="pi pi-check" 
+    label="تأكيد" 
+    class="p-button-success"
+    (click)="confirmCheckOut()">
+  </button>
+</ng-template>
+</p-dialog>
+
+    <!-- رأس الصفحة -->
+    <p-card>
+      <div class="flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="text-2xl font-semibold text-900 m-0">نظام الحضور والانصراف</h1>
+          <p class="text-600 mt-2 mb-0">متابعة حضور وانصراف الموظفين</p>
+        </div>
+        <div class="flex gap-3">
+            <button 
+                pButton 
+                icon="pi pi-user-plus" 
+                label="تسجيل حضور"
+                class="p-button-primary"
+                (click)="openAddAttendanceDialog()"
+                [disabled]="disableCheckInButton">
+            </button>
+
+            <p-calendar 
+            [(ngModel)]="selectedDate" 
+            (onSelect)="onDateChange($event)" 
+            [showIcon]="true" 
+            placeholder="اختر التاريخ"
+            styleClass="p-calendar-rtl"
+            [showButtonBar]="true">
+          </p-calendar>          
+          <button 
+            pButton 
+            icon="pi pi-file-excel" 
+            label="تصدير Excel"
+            class="p-button-outlined p-button-success">
+          </button>
+          
+        </div>
+      </div>
+
+      <p-table 
+        [value]="attendanceRecords || []" 
+        [paginator]="true" 
+        [rows]="10"
+        [responsive]="true"
+        styleClass="p-datatable-striped"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="عرض {first} إلى {last} من {totalRecords} سجل"
+        [rowsPerPageOptions]="[10,25,50]">
+        
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="employeeId">كود الموظف <p-sortIcon field="employeeId"></p-sortIcon></th>
+            <th pSortableColumn="employeeName">الموظف <p-sortIcon field="employeeName"></p-sortIcon></th>
+            <th pSortableColumn="date">التاريخ <p-sortIcon field="date"></p-sortIcon></th>
+            <th>الحضور/الانصراف</th>
+            <th pSortableColumn="totalHours">ساعات العمل <p-sortIcon field="totalHours"></p-sortIcon></th>
+            <!-- <th pSortableColumn="status">الحالة <p-sortIcon field="status"></p-sortIcon></th> -->
+            <th>الإجراءات</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-record>
+          <tr>
+            <td>
+              <span class="font-semibold">{{record.employee?.id?record.employee?.id: ""}}</span>
+            </td>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <span class="font-medium">{{record.employee?.name}}</span>
+              </div>
+            </td>
+            <td>{{record.date | date:'yyyy-MM-dd'}}</td>
+            <td>
+              <div class="flex flex-column">
+                <small class="text-green-600 mb-1">
+                  <i class="pi pi-sign-in mr-1"></i>
+                  <span class="font-medium">{{formatTime(record.firstCheckIn)}}</span>
+                </small>
+                <small class="text-red-600">
+                  <i class="pi pi-sign-out mr-1"></i>
+                  <span class="font-medium">{{formatTime(record.lastCheckOut)}}</span>
+                </small>
+              </div>
+            </td>
+            <td>
+              <div class="flex align-items-center">
+                <span class="mr-2 font-medium">{{formatWorkTime(record.totalWorkTime)}}</span>
+                <p-progressBar 
+                  [value]="getWorkTimePercentage(record.totalWorkTime)" 
+                  [style]="{'height': '0.5rem', 'width': '6rem'}"
+                  [showValue]="false">
+                </p-progressBar>
+              </div>
+            </td>
+            <!-- <td>
+              <p-tag 
+                [value]="record.status" 
+                [severity]="getStatusSeverity(record.status)">
+              </p-tag>
+            </td> -->
+            <td>
+              <div class="flex gap-2">
+
+              <button 
+                  pButton 
+                  icon="pi pi-sign-in" 
+                  class="p-button-rounded p-button-success p-button-text" 
+                  (click)="openCheckInDialog(record)"
+                  pTooltip="تسجيل حضور"
+                  *ngIf="record.nextAction === 'check-in' && isToday(record.date)">
+                </button>
+                
+                <button 
+                  pButton 
+                  icon="pi pi-sign-out" 
+                  class="p-button-rounded p-button-danger p-button-text" 
+                  (click)="openCheckOutDialog(record)"
+                  pTooltip="تسجيل انصراف"
+                  *ngIf="record.nextAction === 'check-out' && isToday(record.date)">
+                </button>
+                
+                <button 
+                  pButton 
+                  icon="pi pi-eye" 
+                  class="p-button-rounded p-button-text" 
+                  (click)="showDetails(record)"
+                  pTooltip="عرض التفاصيل">
+                </button>
+                
+                <button 
+                  pButton 
+                  icon="pi pi-pencil" 
+                  class="p-button-rounded p-button-text p-button-warning" 
+                  (click)="editRecord(record)"
+                  pTooltip="تعديل">
+                </button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <div *ngIf="attendanceRecords.length === 0" class="text-center mt-4">
+            <p>لا توجد بيانات حضور في التاريخ المحدد.</p>
+          </div>
+
+      </p-table>
+    </p-card>
+
+
+    <!-- نافذة التفاصيل المحسنة -->
+    <p-dialog 
+      [(visible)]="showDetailsDialog" 
+      [style]="{width: '600px'}" 
+      header="تفاصيل الحضور والانصراف"
+      [modal]="true"
+      [draggable]="false"
+      styleClass="attendance-details-dialog"
+      [resizable]="false"
+      dismissableMask="true">
+      
+      <div class="p-4" *ngIf="selectedRecord">
+        <!-- Header Section with Employee Details -->
+        <div class="flex align-items-center gap-3 mb-4">
+          <p-avatar 
+            [image]="selectedRecord.avatar"
+            [label]="getAvatarLabel(selectedRecord.employee.name)"
+            [style]="{'background-color': getAvatarColor(selectedRecord.employee.name)}"
+            size="xlarge" 
+            shape="circle">
+          </p-avatar>
+          <div>
+            <h2 class="m-0 mb-1 text-xl">{{selectedRecord.employee.name}}</h2>
+            <p class="m-0 text-600">
+              <i class="pi pi-id-card mr-2"></i> {{selectedRecord.employee.id}}
+            </p>
+            <p class="m-0 text-600">
+              <i class="pi pi-calendar mr-2"></i> {{selectedRecord.date}}
+            </p>
+          </div>
+        </div>
+        
+        <!-- Attendance Summary -->
+        <div class="grid">
+          <div class="col-6">
+            <label class="block font-medium mb-2"><i class="pi pi-clock mr-2"></i> إجمالي وقت العمل</label>
+            <div class="p-2 surface-100 border-round text-center font-medium">
+              {{selectedRecord.totalWorkTime}}
+            </div>
+          </div>
+          <div class="col-6">
+            <label class="block font-medium mb-2"><i class="pi pi-coffee mr-2"></i> وقت الاستراحة</label>
+            <div class="p-2 surface-100 border-round text-center font-medium">
+              {{selectedRecord.totalBreakTime}}
+            </div>
+          </div>
+        </div>
+
+        <div class="grid mt-3">
+          <div class="col-6">
+            <label class="block font-medium mb-2"><i class="pi pi-sign-in mr-2"></i> حالة الحضور</label>
+            <div class="p-2 surface-100 border-round text-center font-medium" 
+                [ngClass]="{'text-green-600': selectedRecord.checkInStatus === 'On Time', 'text-red-600': selectedRecord.checkInStatus === 'Late'}">
+              {{selectedRecord.checkInStatus === 'Late' ? 'متأخر' : 'في الوقت'}}
+            </div>
+          </div>
+          <div class="col-6">
+            <label class="block font-medium mb-2"><i class="pi pi-sign-out mr-2"></i> حالة الانصراف</label>
+            <div class="p-2 surface-100 border-round text-center font-medium"
+                [ngClass]="{'text-green-600': selectedRecord.checkOutStatus === 'On Time', 'text-red-600': selectedRecord.checkOutStatus === 'Early'}">
+              {{selectedRecord.checkOutStatus === 'Early' ? 'مبكر' : 'في الوقت'}}
+            </div>
+          </div>
+        </div>
+
+        <!-- Attendance Periods -->
+        <div class="mt-4">
+          <h3 class="font-medium text-xl mb-3"><i class="pi pi-list mr-2"></i> تفاصيل الفترات</h3>
+          <div class="p-3 surface-100 border-round">
+            <div *ngFor="let period of selectedRecord.attendancePeriods" class="mb-2">
+              <div class="flex justify-content-between align-items-center">
+                <div>
+                  <i class="pi pi-sign-in text-green-600 mr-2"></i> {{formatTime(period.checkInTime)}}
+                </div>
+                <div>
+                  <i class="pi pi-sign-out text-red-600 mr-2"></i> 
+                  {{period.checkOutTime ? formatTime(period.checkOutTime) : '---'}}
+                </div>
+              </div>
+              <hr class="my-2 surface-200" *ngIf="period !== selectedRecord.attendancePeriods[selectedRecord.attendancePeriods.length - 1]" />
+            </div>
+          </div>
+        </div>
+        
+        <!-- Footer Section -->
+        <!-- <div class="grid mt-4">
+          <div class="col-12">
+            <label class="block font-medium mb-2">
+              <i class="pi pi-exclamation-circle mr-2"></i> الإجراء التالي
+            </label>
+            <div class="p-2 surface-100 border-round text-center font-medium">
+              {{selectedRecord.nextAction === 'check-in' ? 'حضور' : 'انصراف'}}
+            </div>
+          </div>
+        </div> -->
+      </div>
+    </p-dialog>
+
+ 
+ 
+  </div>

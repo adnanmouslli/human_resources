@@ -1,0 +1,83 @@
+:host ::ng-deep {
+    .p-card {
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      
+      .p-card-body {
+        padding: 1.5rem;
+      }
+    }
+  
+    .p-progressbar {
+      height: 0.5rem;
+      background: #ebedef;
+      
+      .p-progressbar-value {
+        background: var(--primary-color);
+      }
+    }
+  
+    .p-tag {
+      &.p-tag-success {
+        background: #4CAF50;
+      }
+      &.p-tag-info {
+        background: #2196F3;
+      }
+      &.p-tag-warning {
+        background: #FFA726;
+      }
+      &.p-tag-danger {
+        background: #F44336;
+      }
+    }
+  
+    .p-datatable {
+      .p-datatable-header {
+        background: #ffffff;
+        border: none;
+        padding: 1.5rem;
+      }
+  
+      .p-datatable-thead > tr > th {
+        background: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+        padding: 1rem;
+      }
+  
+      .p-datatable-tbody > tr {
+        &:hover {
+          background: #f8f9fa;
+        }
+  
+        > td {
+          padding: 1rem;
+        }
+      }
+    }
+  
+    .custom-chart {
+      min-height: 300px;
+    }
+  
+    .stat-card {
+      transition: transform 0.2s;
+      cursor: pointer;
+  
+      &:hover {
+        transform: translateY(-3px);
+      }
+    }
+  
+    .p-avatar {
+      background-color: var(--primary-color);
+    }
+  
+    // Responsive adjustments
+    @media screen and (max-width: 768px) {
+      .chart-container {
+        height: 300px;
+      }
+    }
+  }

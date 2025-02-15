@@ -1,0 +1,270 @@
+<div class="surface-card p-4">
+    <p-toast></p-toast>
+  
+    <!-- القسم العلوي - العنوان وأزرار التصدير -->
+    <div class="surface-0 p-4 shadow-2 border-round mb-4">
+      <div class="flex flex-column md:flex-row md:justify-content-between">
+        <div class="flex align-items-center">
+          <i class="pi pi-chart-line text-4xl text-primary mr-3"></i>
+          <div>
+            <div class="text-3xl font-bold text-900">تقارير الإنتاج</div>
+            <span class="text-600">إحصائيات وتحليلات تفصيلية</span>
+          </div>
+        </div>
+        <div class="flex gap-2 mt-3 md:mt-0">
+          <p-button 
+            label="تصدير Excel" 
+            icon="pi pi-file-excel" 
+            severity="success" 
+            [rounded]="true"
+            [raised]="true"
+            (click)="exportExcel()">
+          </p-button>
+          <p-button 
+            label="تصدير PDF" 
+            icon="pi pi-file-pdf" 
+            severity="danger" 
+            [rounded]="true"
+            [raised]="true"
+            (click)="exportPdf()">
+          </p-button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- قسم الفلاتر -->
+    <div class="surface-0 p-4 shadow-2 border-round mb-4">
+      <div class="text-xl font-bold text-900 mb-4">
+        <i class="pi pi-filter mr-2"></i>
+        فلترة البيانات
+      </div>
+      <div class="grid">
+        <div class="col-12 md:col-3">
+          <span class="p-float-label">
+            <p-calendar 
+              [(ngModel)]="dateRange" 
+              selectionMode="range" 
+              [showIcon]="true"
+              styleClass="w-full"
+              [style]="{'width':'100%'}"
+              inputId="dateRange">
+            </p-calendar>
+            <label for="dateRange">الفترة الزمنية</label>
+          </span>
+        </div>
+        <div class="col-12 md:col-3">
+          <span class="p-float-label">
+            <p-multiSelect 
+              [options]="employees()"
+              [(ngModel)]="selectedEmployees"
+              optionLabel="name"
+              [style]="{'width':'100%'}"
+              inputId="employees">
+            </p-multiSelect>
+            <label for="employees">الموظفين</label>
+          </span>
+        </div>
+        <div class="col-12 md:col-3">
+          <span class="p-float-label">
+            <p-multiSelect
+              [options]="selectedPieces"
+              [(ngModel)]="selectedPieces"
+              optionLabel="name"
+              [style]="{'width':'100%'}"
+              inputId="pieces">
+            </p-multiSelect>
+            <label for="pieces">القطع</label>
+          </span>
+        </div>
+        <div class="col-12 md:col-3 flex align-items-end">
+          <p-button 
+            label="تطبيق الفلاتر" 
+            icon="pi pi-search"
+            styleClass="p-button-outlined w-full"
+            [loading]="loading()"
+            (click)="applyFilters()">
+          </p-button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- البطاقات الإحصائية -->
+    <div class="grid">
+      <div class="col-12 md:col-3">
+        <div class="surface-0 shadow-2 p-3 border-round">
+          <div class="flex justify-content-between mb-3">
+            <div>
+              <span class="block text-500 font-medium mb-3">إجمالي الإنتاج</span>
+              <div class="text-900 font-medium text-xl">{{ statistics().totalProduction }}</div>
+            </div>
+            <div class="flex align-items-center justify-content-center bg-blue-100 border-round" style="width:2.5rem;height:2.5rem">
+              <i class="pi pi-box text-blue-500 text-xl"></i>
+            </div>
+          </div>
+          <p-progressBar [value]="75" [showValue]="false" styleClass="mt-2"></p-progressBar>
+        </div>
+      </div>
+  
+      <div class="col-12 md:col-3">
+        <div class="surface-0 shadow-2 p-3 border-round">
+          <div class="flex justify-content-between mb-3">
+            <div>
+              <span class="block text-500 font-medium mb-3">متوسط الجودة</span>
+              <div class="text-900 font-medium text-xl">
+                <p-tag [severity]="getQualitySeverity(statistics().averageQuality)">
+                  {{ statistics().averageQuality }}
+                </p-tag>
+              </div>
+            </div>
+            <div class="flex align-items-center justify-content-center bg-green-100 border-round" style="width:2.5rem;height:2.5rem">
+              <i class="pi pi-star text-green-500 text-xl"></i>
+            </div>
+          </div>
+          <p-progressBar [value]="85" [showValue]="false" styleClass="mt-2"></p-progressBar>
+        </div>
+      </div>
+  
+      <div class="col-12 md:col-3">
+        <div class="surface-0 shadow-2 p-3 border-round">
+          <div class="flex justify-content-between mb-3">
+            <div>
+              <span class="block text-500 font-medium mb-3">إجمالي المبلغ</span>
+              <div class="text-900 font-medium text-xl">{{ statistics().totalAmount }} جنيه</div>
+            </div>
+            <div class="flex align-items-center justify-content-center bg-orange-100 border-round" style="width:2.5rem;height:2.5rem">
+              <i class="pi pi-money-bill text-orange-500 text-xl"></i>
+            </div>
+          </div>
+          <p-progressBar [value]="60" [showValue]="false" styleClass="mt-2"></p-progressBar>
+        </div>
+      </div>
+  
+      <div class="col-12 md:col-3">
+        <div class="surface-0 shadow-2 p-3 border-round">
+          <div class="flex justify-content-between mb-3">
+            <div>
+              <span class="block text-500 font-medium mb-3">أفضل موظف</span>
+              <div class="text-900 font-medium text-xl">{{ statistics().bestEmployee }}</div>
+            </div>
+            <div class="flex align-items-center justify-content-center bg-purple-100 border-round" style="width:2.5rem;height:2.5rem">
+              <i class="pi pi-user text-purple-500 text-xl"></i>
+            </div>
+          </div>
+          <p-progressBar [value]="90" [showValue]="false" styleClass="mt-2"></p-progressBar>
+        </div>
+      </div>
+    </div>
+  
+    <!-- قسم الرسوم البيانية -->
+    <div class="grid mt-4">
+      <div class="col-12 md:col-6">
+        <div class="surface-0 shadow-2 p-4 border-round h-full">
+          <div class="text-xl font-bold text-900 mb-4">
+            <i class="pi pi-chart-line mr-2"></i>
+            معدل الإنتاج الشهري
+          </div>
+          <p-chart type="line" [data]="productivityChart" [options]="chartOptions"></p-chart>
+        </div>
+      </div>
+      
+      <div class="col-12 md:col-6">
+        <div class="surface-0 shadow-2 p-4 border-round h-full">
+          <div class="text-xl font-bold text-900 mb-4">
+            <i class="pi pi-chart-pie mr-2"></i>
+            توزيع جودة الإنتاج
+          </div>
+          <p-chart type="pie" [data]="qualityChart" [options]="chartOptions"></p-chart>
+        </div>
+      </div>
+    </div>
+  
+    <!-- قسم أداء الموظفين -->
+    <div class="surface-0 shadow-2 p-4 border-round mt-4">
+      <div class="text-xl font-bold text-900 mb-4">
+        <i class="pi pi-chart-bar mr-2"></i>
+        أداء الموظفين
+      </div>
+      <p-chart type="bar" [data]="employeePerformanceChart" [options]="chartOptions"></p-chart>
+    </div>
+  
+    <!-- جدول التفاصيل -->
+    <div class="surface-0 shadow-2 p-4 border-round mt-4">
+      <div class="text-xl font-bold text-900 mb-4">
+        <i class="pi pi-list mr-2"></i>
+        تفاصيل الإنتاج
+      </div>
+      <p-table 
+        [value]="employees()" 
+        [loading]="loading()"
+        [paginator]="true" 
+        [rows]="10"
+        [showCurrentPageReport]="true"
+        [rowsPerPageOptions]="[10,25,50]"
+        currentPageReportTemplate="عرض {first} إلى {last} من أصل {totalRecords} سجل"
+        [globalFilterFields]="['name','pieces','quality']"
+        styleClass="p-datatable-gridlines">
+        
+        <ng-template pTemplate="header">
+          <tr>
+            <th>الموظف</th>
+            <th>عدد القطع</th>
+            <th>متوسط الجودة</th>
+            <th>إجمالي المبلغ</th>
+            <th>التقدم</th>
+            <th>أفضل يوم</th>
+          </tr>
+        </ng-template>
+  
+        <ng-template pTemplate="body" let-employee>
+          <tr>
+            <td>
+              <div class="flex align-items-center">
+                <span class="font-medium">{{employee.name}}</span>
+              </div>
+            </td>
+            <td>
+              <div class="flex align-items-center">
+                <i class="pi pi-box mr-2 text-primary"></i>
+                <span>{{employee.totalPieces}}</span>
+              </div>
+            </td>
+            <td>
+              <p-tag 
+                [value]="employee.averageQuality"
+                [severity]="getQualitySeverity(employee.averageQuality)">
+              </p-tag>
+            </td>
+            <td>
+              <div class="flex align-items-center">
+                <i class="pi pi-money-bill mr-2 text-green-500"></i>
+                <span>{{employee.totalAmount}} جنيه</span>
+              </div>
+            </td>
+            <td style="width: 200px">
+              <p-progressBar 
+                [value]="employee.progress" 
+                [showValue]="true"
+                [style]="{'height': '0.5rem'}"
+                class="mt-2">
+              </p-progressBar>
+            </td>
+            <td>
+              <div class="flex align-items-center">
+                <i class="pi pi-calendar mr-2 text-primary"></i>
+                <span>{{employee.bestDay}}</span>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+  
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="text-center p-4">
+              <i class="pi pi-info-circle mr-2"></i>
+              لا توجد بيانات متاحة
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>

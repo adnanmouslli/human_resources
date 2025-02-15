@@ -1,0 +1,173 @@
+<app-loading [show]="loading()" type="circle" message="جاري المعالجة..."></app-loading>
+
+<div class="card">
+  <p-toast></p-toast>
+  <p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+  
+  <p-toolbar styleClass="mb-4">
+    <div class="p-toolbar-group-start">
+      <h2 class="text-2xl font-bold m-0">جزاءات الموظفين</h2>
+    </div>
+    <div class="p-toolbar-group-end">
+      <p-button 
+        label="إضافة جزاء جديد"
+        icon="pi pi-plus"
+        styleClass="p-button-raised p-button-primary" 
+        [rounded]="true"
+        (click)="showAddDialog()">
+      </p-button>
+    </div>
+  </p-toolbar>
+
+  <p-table 
+    [value]="penalties()" 
+    [loading]="loading()"
+    [rows]="5" 
+    [paginator]="true"
+    [rowsPerPageOptions]="[5,10,20]"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="عرض {first} إلى {last} من أصل {totalRecords} جزاء"
+    [rowHover]="true"
+    styleClass="p-datatable-gridlines p-datatable-striped">
+    
+    <ng-template pTemplate="header">
+      <tr>
+        <th>م</th>
+        <th>التاريخ</th>
+        <th>كود الموظف</th>
+        <th>اسم الموظف</th>
+        <th>القيمة</th>
+        <th>رقم المستند</th>
+        <th>ملاحظات</th>
+        <th>الإجراءات</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-penalty let-i="rowIndex">
+      <tr>
+        <td>{{i + 1}}</td>
+        <td>{{penalty.date | date:'yyyy-MM-dd'}}</td>
+        <td>{{penalty.employee_code}}</td>
+        <td>{{penalty.employee_name}}</td>
+        <td>{{penalty.amount}} جنيه</td>
+        <td>{{penalty.document_number}}</td>
+        <td>{{penalty.notes}}</td>
+        <td>
+          <p-button 
+            icon="pi pi-pencil" 
+            styleClass="p-button-rounded p-button-warning p-button-text mr-2"
+            pTooltip="تعديل"
+            tooltipPosition="top"
+            (click)="editPenalty(penalty)">
+          </p-button>
+          <p-button 
+            icon="pi pi-trash" 
+            styleClass="p-button-rounded p-button-danger p-button-text"
+            pTooltip="حذف"
+            tooltipPosition="top"
+            (click)="confirmDelete(penalty)">
+          </p-button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- نموذج الإضافة/التعديل -->
+  <p-dialog 
+    [(visible)]="displayDialog" 
+    [header]="dialogHeader"
+    [modal]="true"
+    [style]="{width: '500px'}"
+    [draggable]="false"
+    [resizable]="false"
+    styleClass="p-fluid"
+    [rtl]="true">
+    
+    <div class="field">
+      <label for="date">التاريخ</label>
+      <p-calendar 
+        [(ngModel)]="penalty.date"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        inputId="date"
+        [style]="{'width':'100%'}"
+        [ngClass]="{'ng-invalid ng-dirty': submitted && !penalty.date}"
+      ></p-calendar>
+      <small class="p-error" *ngIf="submitted && !penalty.date">التاريخ مطلوب</small>
+    </div>
+
+    <div class="field">
+      <label for="employee">الموظف</label>
+      <p-dropdown
+        [(ngModel)]="selectedEmployee"
+        [options]="employees"
+        optionLabel="name"
+        [filter]="true"
+        filterBy="name,code"
+        placeholder="اختر الموظف"
+        [showClear]="true"
+        (onChange)="onEmployeeSelect($event)"
+        [ngClass]="{'ng-invalid ng-dirty': submitted && !selectedEmployee}"
+      >
+        <ng-template pTemplate="item" let-employee>
+          {{employee.code}} - {{employee.name}}
+        </ng-template>
+      </p-dropdown>
+      <small class="p-error" *ngIf="submitted && !selectedEmployee">الموظف مطلوب</small>
+    </div>
+
+    <div class="field">
+      <label for="amount">قيمة الجزاء</label>
+      <p-inputNumber 
+        [(ngModel)]="penalty.amount" 
+        mode="decimal" 
+        [minFractionDigits]="2" 
+        [maxFractionDigits]="2"
+        [min]="0"
+        placeholder="0.00"
+        [ngClass]="{'ng-invalid ng-dirty': submitted && !penalty.amount}"
+      ></p-inputNumber>
+      <small class="p-error" *ngIf="submitted && !penalty.amount">قيمة الجزاء مطلوبة</small>
+    </div>
+
+    <div class="field">
+      <label for="document_number">رقم المستند</label>
+      <input 
+        pInputText 
+        id="document_number" 
+        [(ngModel)]="penalty.document_number" 
+        [ngClass]="{'ng-invalid ng-dirty': submitted && !penalty.document_number}"
+      />
+      <small class="p-error" *ngIf="submitted && !penalty.document_number">رقم المستند مطلوب</small>
+    </div>
+
+    <div class="field">
+      <label for="notes">ملاحظات</label>
+      <textarea 
+        pInputTextarea 
+        id="notes" 
+        [(ngModel)]="penalty.notes" 
+        rows="3"
+      ></textarea>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button 
+        pButton 
+        pRipple 
+        label="إلغاء" 
+        icon="pi pi-times" 
+        class="p-button-text" 
+        (click)="hideDialog()"
+      ></button>
+      <button 
+        pButton 
+        pRipple 
+        label="حفظ" 
+        icon="pi pi-check" 
+        class="p-button-text" 
+        (click)="savePenalty()"
+      ></button>
+    </ng-template>
+  </p-dialog>
+</div>

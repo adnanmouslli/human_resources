@@ -1,0 +1,100 @@
+// ::ng-deep {
+//     .p-dropdown {
+//       border-radius: 8px;
+  
+//       .p-dropdown-label {
+//         padding: 0.75rem 1rem;
+//         text-align: right;
+//         color: #495057;
+        
+//         &.p-placeholder {
+//           color: #6c757d;
+//         }
+//       }
+  
+//       // تحسين أيقونة التنظيف
+//       .p-dropdown-clear-icon {
+//         right: auto;
+//         left: 3rem;
+//         color: #6c757d;
+//         font-size: 14px;
+//       }
+        
+//       // تحسين أيقونة السهم
+//       .p-dropdown-trigger {
+//         background: transparent;
+//         padding: 0 0.75rem;
+//         width: 3rem;
+//         border-top-left-radius: 8px;
+//         border-bottom-left-radius: 8px;
+//       }
+  
+//       // تحسين لوحة القائمة المنسدلة
+//       .p-dropdown-panel {
+//         border-radius: 8px;
+//         margin-top: 0.5rem;
+//         box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  
+//         .p-dropdown-filter-container {
+//           padding: 0.75rem;
+//           border-bottom: 1px solid #dee2e6;
+  
+//           .p-dropdown-filter {
+//             padding-right: 2.5rem;
+//             padding-left: 1rem;
+//             text-align: right;
+//             border-radius: 6px;
+  
+//             &:focus {
+//               box-shadow: none;
+//               border-color: var(--primary-color);
+//             }
+//           }
+  
+//           .p-dropdown-filter-icon {
+//             right: 1rem;
+//             left: auto;
+//             color: #6c757d;
+//           }
+//         }
+  
+//         .p-dropdown-items {
+//           padding: 0.5rem;
+  
+//           .p-dropdown-item {
+//             padding: 0.75rem 1rem;
+//             margin: 0.25rem 0;
+//             border-radius: 6px;
+//             display: flex;
+//             align-items: center;
+//             gap: 0.5rem;
+//             transition: all 0.2s;
+//             color: #495057;
+            
+//             i {
+//               color: var(--primary-color);
+//             }
+  
+//             &:hover {
+//               background-color: var(--primary-50);
+//             }
+  
+//             &.p-highlight {
+//               background-color: var(--primary-50);
+//               color: var(--primary-color);
+//             }
+//           }
+//         }
+//       }
+  
+//       // تحسين حالة التركيز
+//       &:not(.p-disabled):hover {
+//         border-color: var(--primary-color);
+//       }
+  
+//       &.p-focus {
+//         border-color: var(--primary-color);
+//         box-shadow: 0 0 0 1px var(--primary-color-transparent);
+//       }
+//     }
+//   }

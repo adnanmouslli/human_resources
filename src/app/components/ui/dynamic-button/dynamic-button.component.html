@@ -1,0 +1,62 @@
+<button
+      [type]="options.type || 'button'"
+      [class]="'p-button ' + (options.class || '') + ' ' + getSizeClass() + (options.loading ? ' p-button-loading' : '')"
+      [disabled]="options.disabled || options.loading"
+      (click)="onClick()"
+      pButton
+      pRipple
+    >
+      <!-- Loading spinner -->
+      <span *ngIf="options.loading" class="p-button-loading-icon pi pi-spinner pi-spin mr-2"></span>
+
+      <!-- Left icon -->
+      <i *ngIf="options.icon && options.iconPosition !== 'right' && !options.loading"
+         [class]="'pi ' + options.icon"
+         class="mr-2">
+      </i>
+
+      <!-- Button text -->
+      <span *ngIf="options.label">{{ options.label }}</span>
+
+      <!-- Right icon -->
+      <i *ngIf="options.icon && options.iconPosition === 'right' && !options.loading"
+         [class]="'pi ' + options.icon"
+         class="ml-2">
+      </i>
+</button>
+
+
+<!-- doc -->
+
+<!-- <h5>Default</h5>
+<div class="flex flex-wrap gap-2">
+  <app-dynamic-button label="Submit"></app-dynamic-button>
+  <app-dynamic-button label="Disabled" [disabled]="true"></app-dynamic-button>
+  <app-dynamic-button label="Link" class="p-button-link"></app-dynamic-button>
+</div>
+</div>
+
+<div class="card">
+<h5>Severities</h5>
+<div class="flex flex-wrap gap-2">
+  <app-dynamic-button label="Primary"></app-dynamic-button>
+  <app-dynamic-button label="Secondary" class="p-button-secondary"></app-dynamic-button>
+  <app-dynamic-button label="Success" class="p-button-success"></app-dynamic-button>
+  <app-dynamic-button label="Info" class="p-button-info"></app-dynamic-button>
+  <app-dynamic-button label="Warning" class="p-button-warning"></app-dynamic-button>
+  <app-dynamic-button label="Help" class="p-button-help"></app-dynamic-button>
+  <app-dynamic-button label="Danger" class="p-button-danger"></app-dynamic-button>
+</div>
+</div>
+
+<div class="card">
+<h5>Rounded Icons</h5>
+<div class="flex flex-wrap gap-2">
+  <app-dynamic-button icon="pi pi-check" class="p-button-rounded"></app-dynamic-button>
+  <app-dynamic-button icon="pi pi-bookmark" class="p-button-rounded p-button-secondary"></app-dynamic-button>
+  <app-dynamic-button icon="pi pi-search" class="p-button-rounded p-button-success"></app-dynamic-button>
+  <app-dynamic-button icon="pi pi-user" class="p-button-rounded p-button-info"></app-dynamic-button>
+  <app-dynamic-button icon="pi pi-bell" class="p-button-rounded p-button-warning"></app-dynamic-button>
+  <app-dynamic-button icon="pi pi-heart" class="p-button-rounded p-button-help"></app-dynamic-button>
+  <app-dynamic-button icon="pi pi-times" class="p-button-rounded p-button-danger"></app-dynamic-button>
+</div> -->

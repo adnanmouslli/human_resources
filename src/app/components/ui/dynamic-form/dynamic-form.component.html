@@ -1,0 +1,32 @@
+<div *ngIf="useCard" class="card p-fluid">
+  <h5>{{ formTitle }}</h5>
+  <ng-container *ngTemplateOutlet="formTemplate"></ng-container>
+</div>
+<div *ngIf="!useCard" class="p-fluid">
+  <ng-container *ngTemplateOutlet="formTemplate"></ng-container>
+</div>
+
+<ng-template #formTemplate>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div *ngFor="let field of fields" class="field">
+      <label [for]="field.name">{{ field.label }}</label>
+      <input
+        pInputText
+        [type]="field.type || 'text'"
+        [id]="field.name"
+        [formControlName]="field.name"
+        [placeholder]="field.placeholder || ''"
+        class="p-inputtext p-component"
+      />
+      <small *ngIf="form.get(field.name)?.hasError('required') && form.get(field.name)?.touched" class="p-error">
+        هذا الحقل مطلوب
+      </small>
+      <small *ngIf="form.get(field.name)?.hasError('email') && form.get(field.name)?.touched" class="p-error">
+        البريد الإلكتروني غير صحيح
+      </small>
+      <small *ngIf="form.get(field.name)?.hasError('minlength') && form.get(field.name)?.touched" class="p-error">
+        يجب أن يحتوي على {{ field.minLength }} أحرف على الأقل
+      </small>
+    </div>
+  </form>
+</ng-template>
