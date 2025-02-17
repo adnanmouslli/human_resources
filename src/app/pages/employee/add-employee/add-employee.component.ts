@@ -21,6 +21,8 @@ import { animate, style, transition, trigger } from '@angular/animations';
 import { ShiftService } from '../../../core/services/shifts/shifts.service';
 import { JobTitleService } from '../../../core/services/job-titles/job-titles.service';
 import { JobTitle } from '../../../type/job-title';
+import { ProfessionsService } from '../../../core/services/professions/professions.service';
+import { SelectButtonModule } from 'primeng/selectbutton';
 
 @Component({
   selector: 'app-add-employee',
@@ -42,7 +44,9 @@ import { JobTitle } from '../../../type/job-title';
     InputGroupModule,
     InputGroupAddonModule,
     DynamicButtonComponent,
-    ToastModule
+    ToastModule,
+    SelectButtonModule,
+
   ],
   providers: [MessageService],
   templateUrl: './add-employee.component.html',
@@ -67,17 +71,38 @@ export class AddEmployeeComponent implements OnInit {
   private messageService = inject(MessageService);
   private shiftService = inject(ShiftService);
   private jobTitleService = inject(JobTitleService);
+  private professionService = inject(ProfessionsService); // إضافة خدمة المهن
+
   
   private readonly WORK_SYSTEM_MAPPINGS: { [key: string]: any } = {
     'Production System': { label: 'نظام انتاجية', value: 'productivity', icon: 'pi pi-chart-line' },
     'Shift System': { label: 'نظام وردية', value: 'shift', icon: 'pi pi-clock' },
-    'Hours System': { label: 'نظام ساعات', value: 'hours', icon: 'pi pi-calendar' },
+    'Month System': { label: 'النظام الشهري', value: 'months', icon: 'pi pi-calendar' },
     'Custom System': { label: 'نظام مخصص', value: 'custom', icon: 'pi pi-cog' }
   };
+
+  private readonly TEMPORARY_WORK_SYSTEMS = [
+    { label: 'نظام الساعات', value: 'hours', icon: 'pi pi-calendar' },
+    { label: 'النظام الشهري', value: 'monthly', icon: 'pi pi-calendar-plus' }
+  ];
+
+  // تعريف أنواع الموظفين
+  employeeTypes = [
+    { label: 'موظف دائم', value: 'permanent' },
+    { label: 'موظف مؤقت', value: 'temporary' }
+  ];
+
+  // تعريف أنظمة العمل للموظف المؤقت
+  temporaryWorkSystems = [
+    { label: 'نظام الساعات', value: 'hours', icon: 'pi pi-calendar' },
+    { label: 'النظام الشهري', value: 'monthly', icon: 'pi pi-calendar-plus' }
+  ];
 
   jobTitles: JobTitle[] = [];
   workSystemOptions: any[] = [];
   shifts: any[] = [];
+  professions: any[] = []; 
+
 
   constructor(private fb: FormBuilder) {
     this.initForm();
@@ -85,10 +110,53 @@ export class AddEmployeeComponent implements OnInit {
 
   ngOnInit() {
     this.loadJobTitles();
+    this.loadProfessions(); 
     this.setupFormSubscriptions();
   }
 
+  getWorkSystemOptions(): any[] {
+    const employeeType = this.employeeForm.get('employee_type')?.value;
+    
+    if (employeeType === 'temporary') {
+      return this.TEMPORARY_WORK_SYSTEMS;
+    } else if (employeeType === 'permanent') {
+      return this.workSystemOptions; 
+    }
+    return [];
+  }
+
   private setupFormSubscriptions() {
+
+     // مراقبة تغييرات نوع الموظف
+     this.employeeForm.get('employee_type')?.valueChanges.subscribe(type => {
+      // Reset related fields
+      this.employeeForm.patchValue({
+        position: '',
+        profession: '',
+        work_system: '',
+        shift_id: ''
+      });
+
+      if (type === 'temporary') {
+        this.employeeForm.get('profession')?.setValidators([Validators.required]);
+        this.employeeForm.get('position')?.clearValidators();
+      } else {
+        this.employeeForm.get('position')?.setValidators([Validators.required]);
+        this.employeeForm.get('profession')?.clearValidators();
+      }
+
+      this.employeeForm.get('profession')?.updateValueAndValidity();
+      this.employeeForm.get('position')?.updateValueAndValidity();
+    });
+
+    // مراقبة تغييرات المسمى الوظيفي (للموظف الدائم فقط)
+    this.employeeForm.get('position')?.valueChanges.subscribe(positionId => {
+      if (positionId && this.employeeForm.get('employee_type')?.value === 'permanent') {
+        this.loadWorkSystems(positionId);
+      }
+    });
+
+
     // مراقبة تغييرات المسمى الوظيفي
     this.employeeForm.get('position')?.valueChanges.subscribe(positionId => {
       if (positionId) {
@@ -114,6 +182,22 @@ export class AddEmployeeComponent implements OnInit {
         shiftControl?.setValue('');
       }
       shiftControl?.updateValueAndValidity();
+    });
+  }
+
+  private loadProfessions() {
+    this.professionService.getAllProfessions().subscribe({
+      next: (response) => {
+        this.professions = response;
+      },
+      error: (error) => {
+        console.error('Error loading professions:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'خطأ',
+          detail: 'حدث خطأ أثناء تحميل المهن'
+        });
+      }
     });
   }
 
@@ -177,12 +261,13 @@ export class AddEmployeeComponent implements OnInit {
   
   private initForm() {
     this.employeeForm = this.fb.group({
-      shift_id: [''],
+      employee_type: ['', Validators.required],
       fingerprint_id: ['', [Validators.required]],
       full_name: ['', [Validators.required, Validators.minLength(3)]],
-      position: ['', [Validators.required]], 
-      salary: [null, [Validators.required, Validators.min(0)]],
-      advancePercentage: [null, [Validators.required, Validators.min(1), Validators.max(100)]], // حقل نسبة السلفة
+      position: [''],  // سنضيف الvalidators حسب نوع الموظف
+      profession: [''], // سنضيف الvalidators حسب نوع الموظف
+      salary: [null],  // سنضيف الvalidators حسب نوع الموظف
+      advancePercentage: [null], // سنضيف الvalidators حسب نوع الموظف
       work_system: ['', Validators.required],
       certificates: [''],
       birth_date: [null],
@@ -194,22 +279,82 @@ export class AddEmployeeComponent implements OnInit {
       phone2: [''],
       phone3: [''],
       agreement: ['Standard'],
-      notes: ['']
+      notes: [''],
+      shift_id: ['']
+    });
+
+    // مراقبة تغييرات نوع الموظف
+    this.employeeForm.get('employee_type')?.valueChanges.subscribe(type => {
+      this.updateValidators(type);
     });
   }
-  
+
+  private updateValidators(employeeType: string) {
+    const salaryControl = this.employeeForm.get('salary');
+    const positionControl = this.employeeForm.get('position');
+    const professionControl = this.employeeForm.get('profession');
+    const advancePercentageControl = this.employeeForm.get('advancePercentage');
+
+    // إعادة تعيين كل الvalidators
+    salaryControl?.clearValidators();
+    positionControl?.clearValidators();
+    professionControl?.clearValidators();
+    advancePercentageControl?.clearValidators();
+
+    if (employeeType === 'permanent') {
+      // الحقول المطلوبة للموظف الدائم
+      salaryControl?.setValidators([Validators.required, Validators.min(0)]);
+      positionControl?.setValidators([Validators.required]);
+      advancePercentageControl?.setValidators([
+        Validators.required,
+        Validators.min(1),
+        Validators.max(100)
+      ]);
+      
+      // إفراغ حقل المهنة
+      professionControl?.setValue('');
+    } else if (employeeType === 'temporary') {
+      // الحقول المطلوبة للموظف المؤقت
+      professionControl?.setValidators([Validators.required]);
+      
+      // إفراغ الحقول غير المطلوبة
+      positionControl?.setValue('');
+      advancePercentageControl?.setValue(null);
+    }
+
+    // تحديث حالة الvalidation
+    salaryControl?.updateValueAndValidity();
+    positionControl?.updateValueAndValidity();
+    professionControl?.updateValueAndValidity();
+    advancePercentageControl?.updateValueAndValidity();
+
+    // إعادة تعيين قيم أخرى عند تغيير نوع الموظف
+    this.employeeForm.patchValue({
+      work_system: '',
+      shift_id: ''
+    });
+  }
 
   isFieldInvalid(fieldName: string): boolean {
     const field = this.employeeForm.get(fieldName);
-    return field ? (field.invalid && field.touched) : false;
+    if (!field) return false;
+
+    // التحقق من وجود validators للحقل
+    const hasValidators = field.validator !== null;
+    
+    // إذا لم يكن هناك validators، فالحقل صحيح دائماً
+    if (!hasValidators) return false;
+
+    // التحقق من صحة الحقل فقط إذا كان له validators
+    return field.invalid && field.touched;
   }
 
   onSubmit() {
-    console.log(this.employeeForm)
     if (this.employeeForm.valid) {
       this.loading = true;
       const formattedData = this.formatEmployeeData(this.employeeForm.value);
-      
+
+      console.log("formattedData" , formattedData)
       this.employeeService.addEmployee(formattedData).subscribe({
         next: (response: any) => {
           this.messageService.add({
@@ -242,9 +387,15 @@ export class AddEmployeeComponent implements OnInit {
 
   private formatEmployeeData(formData: any): any {
     return {
+      employee_type: formData.employee_type,
+
+      ...(formData.employee_type === 'permanent' 
+        ? { position: formData.position }
+        : { profession: formData.profession }
+      ),
+
       fingerprint_id: formData.fingerprint_id,
       full_name: formData.full_name,
-      position: formData.position,
       salary: Number(formData.salary),
       advancePercentage: formData.advancePercentage,  // إضافة نسبة السلفة
       work_system: formData.work_system,

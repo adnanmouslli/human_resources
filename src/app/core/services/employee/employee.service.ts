@@ -5,6 +5,15 @@ import { catchError, map, tap } from 'rxjs/operators';
 import { ConfigService } from '../../../core/services/config.service';
 import { Employee, ListEmployee } from '../../../type/employee';
 
+
+export enum WorkSystem {
+  MONTHLY = 'months',
+  SHIFT = 'shift',
+  HOURS = 'hours',
+  PRODUCTION = 'production'
+}
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -88,6 +97,20 @@ export class EmployeeService {
       catchError(this.handleError)
     );
   }
+
+  getEmployeesBySystem(system: WorkSystem): Observable<ListEmployee[]> {
+    return this.http.get<ListEmployee[]>(`${this.apiEndpoint}/by-system/${system}`).pipe(
+        map(employees => this.sortEmployees(employees)),
+        catchError(error => {
+            console.error(`Error fetching ${system} employees:`, error);
+            return throwError(() => new Error('فشل في جلب بيانات الموظفين'));
+        })
+    );
+}
+
+private sortEmployees(employees: ListEmployee[]): ListEmployee[] {
+  return employees.sort((a, b) => a.full_name.localeCompare(b.full_name));
+}
   
   private handleError = (error: HttpErrorResponse) => {
     let errorMessage = 'Operation failed. Please try again.';

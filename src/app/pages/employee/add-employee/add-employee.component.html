@@ -19,6 +19,7 @@
       </ng-template>
       
       <div class="grid p-4">
+        <!-- رقم البصمة -->
         <div class="col-12 md:col-6 lg:col-4 mb-4">
           <label class="block font-medium mb-2">رقم البصمة *</label>
           <p-inputGroup>
@@ -27,9 +28,9 @@
               <i class="pi pi-id-card"></i>
             </p-inputGroupAddon>
           </p-inputGroup>
-        
         </div>
 
+        <!-- الاسم الكامل -->
         <div class="col-12 md:col-6 lg:col-4 mb-4">
           <label class="block font-medium mb-2">الاسم الكامل *</label>
           <p-inputGroup>
@@ -43,7 +44,31 @@
           </small>
         </div>
 
+        <!-- نوع الموظف -->
         <div class="col-12 md:col-6 lg:col-4 mb-4">
+          <label class="block font-medium mb-2">نوع الموظف *</label>
+          <div class="employee-type-selector">
+            <p-selectButton 
+              [options]="employeeTypes" 
+              formControlName="employee_type"
+              [styleClass]="'employee-type-buttons'"
+              optionLabel="label"
+              optionValue="value">
+              <ng-template let-item pTemplate>
+                <div class="flex align-items-center justify-content-center p-2 gap-2">
+                  <i [class]="item.value === 'permanent' ? 'pi pi-user text-primary' : 'pi pi-user-edit text-primary'"></i>
+                  <span>{{item.label}}</span>
+                </div>
+              </ng-template>
+            </p-selectButton>
+          </div>
+          <small class="text-red-500" *ngIf="isFieldInvalid('employee_type')">
+            نوع الموظف مطلوب
+          </small>
+        </div>
+
+        <!-- المسمى الوظيفي (للموظف الدائم) -->
+        <div class="col-12 md:col-6 lg:col-4 mb-4" *ngIf="employeeForm.get('employee_type')?.value === 'permanent'" [@fadeInOut]>
           <label class="block font-medium mb-2">المسمى الوظيفي *</label>
           <p-dropdown 
             [options]="jobTitles" 
@@ -57,11 +82,7 @@
             optionValue="id">
             <ng-template pTemplate="item" let-jobTitle>
               <div class="flex align-items-center">
-                <span>{{jobTitle.title_name}}</span>
-              </div>
-            </ng-template>
-            <ng-template pTemplate="selectedItem" let-jobTitle>
-              <div class="flex align-items-center">
+                <i class="pi pi-briefcase mr-2 text-primary"></i>
                 <span>{{jobTitle.title_name}}</span>
               </div>
             </ng-template>
@@ -69,28 +90,48 @@
           <small class="text-red-500" *ngIf="isFieldInvalid('position')">
             المسمى الوظيفي مطلوب
           </small>
-    
         </div>
 
+        <!-- المهنة (للموظف المؤقت) -->
+        <div class="col-12 md:col-6 lg:col-4 mb-4" *ngIf="employeeForm.get('employee_type')?.value === 'temporary'" [@fadeInOut]>
+          <label class="block font-medium mb-2">المهنة *</label>
+          <p-dropdown 
+            [options]="professions" 
+            formControlName="profession"
+            placeholder="اختر المهنة"
+            [showClear]="false" 
+            styleClass="w-full"
+            [style]="{'direction': 'rtl'}"
+            [emptyMessage]="'لا توجد مهن متاحة'"
+            optionLabel="name"
+            optionValue="id">
+            <ng-template pTemplate="item" let-profession>
+              <div class="flex align-items-center">
+                <i class="pi pi-briefcase mr-2 text-primary"></i>
+                <span>{{profession.name}}</span>
+              </div>
+            </ng-template>
+          </p-dropdown>
+          <small class="text-red-500" *ngIf="isFieldInvalid('profession')">
+            المهنة مطلوبة
+          </small>
+        </div>
+
+        <!-- نظام العمل -->
         <div class="col-12 md:col-6 lg:col-4 mb-4">
           <label class="block font-medium mb-2">نظام العمل *</label>
           <p-dropdown 
-            [options]="workSystemOptions" 
+            [options]="getWorkSystemOptions()" 
             formControlName="work_system"
             placeholder="اختر نظام العمل"
             [showClear]="false"
             styleClass="w-full"
             [style]="{'direction': 'rtl'}"
-            [disabled]="workSystemOptions.length === 0"
             optionLabel="label"
             optionValue="value">
             <ng-template pTemplate="item" let-option>
               <div class="flex align-items-center">
-                <span>{{option.label}}</span>
-              </div>
-            </ng-template>
-            <ng-template pTemplate="selectedItem" let-option>
-              <div class="flex align-items-center">
+                <i [class]="option.icon + ' mr-2 text-primary'"></i>
                 <span>{{option.label}}</span>
               </div>
             </ng-template>
@@ -100,6 +141,7 @@
           </small>
         </div>
 
+        <!-- الوردية (في حالة نظام الورديات) -->
         <div class="col-12 md:col-6 lg:col-4 mb-4" 
             *ngIf="employeeForm.get('work_system')?.value === 'shift'"
             [@fadeInOut]>
@@ -119,18 +161,13 @@
                 <span>{{shift.name}}</span>
               </div>
             </ng-template>
-            <ng-template pTemplate="selectedItem" let-shift>
-              <div class="flex align-items-center">
-                <i class="pi pi-clock mr-2 text-primary"></i>
-                <span>{{shift.name}}</span>
-              </div>
-            </ng-template>
           </p-dropdown>
           <small class="text-red-500" *ngIf="isFieldInvalid('shift_id')">
             الوردية مطلوبة
           </small>
         </div>
 
+        <!-- الشهادة -->
         <div class="col-12 md:col-6 lg:col-4 mb-4">
           <label class="block font-medium mb-2">الشهادة</label>
           <p-inputGroup>
@@ -224,7 +261,7 @@
     </p-card>
 
     <!-- البيانات المالية -->
-    <p-card styleClass="mb-4 shadow-md hover:shadow-lg transition-all transition-duration-200">
+    <p-card styleClass="mb-4 shadow-md hover:shadow-lg transition-all transition-duration-200" *ngIf="employeeForm.get('employee_type')?.value === 'permanent'" [@fadeInOut]>
       <ng-template pTemplate="header">
         <div class="px-4 py-3 surface-50 border-round-top">
           <div class="flex align-items-center">
@@ -282,7 +319,7 @@
     </p-card>
 
     <!-- التواريخ -->
-    <p-card styleClass="mb-4 shadow-md hover:shadow-lg transition-all transition-duration-200">
+    <p-card styleClass="mb-4 shadow-md hover:shadow-lg transition-all transition-duration-200" *ngIf="employeeForm.get('employee_type')?.value === 'permanent'" [@fadeInOut]>
       <ng-template pTemplate="header">
         <div class="px-4 py-3 surface-50 border-round-top">
           <div class="flex align-items-center">
@@ -317,7 +354,7 @@
     </p-card>
 
     <!-- معلومات إضافية -->
-    <p-card styleClass="mb-4 shadow-md hover:shadow-lg transition-all transition-duration-200">
+    <p-card styleClass="mb-4 shadow-md hover:shadow-lg transition-all transition-duration-200" *ngIf="employeeForm.get('employee_type')?.value === 'permanent'" [@fadeInOut]>
       <ng-template pTemplate="header">
         <div class="px-4 py-3 surface-50 border-round-top">
           <div class="flex align-items-center">

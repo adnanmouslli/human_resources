@@ -249,7 +249,7 @@ header="تسجيل الانصراف">
             </td>
             <td>
               <div class="flex align-items-center gap-2">
-                <span class="font-medium">{{record.employee?.name}}</span>
+                <span class="font-medium">{{record.employee?.full_name}}</span>
               </div>
             </td>
             <td>{{record.date | date:'yyyy-MM-dd'}}</td>
@@ -330,20 +330,20 @@ header="تسجيل الانصراف">
     </p-card>
 
 
-    <!-- نافذة التفاصيل المحسنة -->
     <p-dialog 
-      [(visible)]="showDetailsDialog" 
-      [style]="{width: '600px'}" 
-      header="تفاصيل الحضور والانصراف"
-      [modal]="true"
-      [draggable]="false"
-      styleClass="attendance-details-dialog"
-      [resizable]="false"
-      dismissableMask="true">
-      
-      <div class="p-4" *ngIf="selectedRecord">
-        <!-- Header Section with Employee Details -->
-        <div class="flex align-items-center gap-3 mb-4">
+    [(visible)]="showDetailsDialog" 
+    [style]="{width: '800px'}" 
+    header="تفاصيل الحضور والانصراف"
+    [modal]="true"
+    [draggable]="false"
+    styleClass="attendance-details-dialog"
+    [resizable]="false"
+    dismissableMask="true">
+    
+    <div class="p-4" *ngIf="selectedRecord">
+      <!-- Employee Header Section -->
+      <div class="surface-ground p-4 border-round mb-4">
+        <div class="flex align-items-start gap-3">
           <p-avatar 
             [image]="selectedRecord.avatar"
             [label]="getAvatarLabel(selectedRecord.employee.name)"
@@ -351,83 +351,233 @@ header="تسجيل الانصراف">
             size="xlarge" 
             shape="circle">
           </p-avatar>
-          <div>
-            <h2 class="m-0 mb-1 text-xl">{{selectedRecord.employee.name}}</h2>
-            <p class="m-0 text-600">
-              <i class="pi pi-id-card mr-2"></i> {{selectedRecord.employee.id}}
-            </p>
-            <p class="m-0 text-600">
-              <i class="pi pi-calendar mr-2"></i> {{selectedRecord.date}}
-            </p>
-          </div>
-        </div>
-        
-        <!-- Attendance Summary -->
-        <div class="grid">
-          <div class="col-6">
-            <label class="block font-medium mb-2"><i class="pi pi-clock mr-2"></i> إجمالي وقت العمل</label>
-            <div class="p-2 surface-100 border-round text-center font-medium">
-              {{selectedRecord.totalWorkTime}}
+          <div class="flex-1">
+            <h2 class="m-0 mb-1 text-xl">{{selectedRecord.employee.full_name}}</h2>
+            <div class="flex flex-wrap gap-3">
+              <span class="text-600">
+                <i class="pi pi-id-card mr-2"></i>{{selectedRecord.employee.fingerprint_id}}
+              </span>
+              <span class="text-600">
+                <i class="pi pi-calendar mr-2"></i>{{selectedRecord.date}}
+              </span>
             </div>
-          </div>
-          <div class="col-6">
-            <label class="block font-medium mb-2"><i class="pi pi-coffee mr-2"></i> وقت الاستراحة</label>
-            <div class="p-2 surface-100 border-round text-center font-medium">
-              {{selectedRecord.totalBreakTime}}
-            </div>
-          </div>
-        </div>
-
-        <div class="grid mt-3">
-          <div class="col-6">
-            <label class="block font-medium mb-2"><i class="pi pi-sign-in mr-2"></i> حالة الحضور</label>
-            <div class="p-2 surface-100 border-round text-center font-medium" 
-                [ngClass]="{'text-green-600': selectedRecord.checkInStatus === 'On Time', 'text-red-600': selectedRecord.checkInStatus === 'Late'}">
-              {{selectedRecord.checkInStatus === 'Late' ? 'متأخر' : 'في الوقت'}}
-            </div>
-          </div>
-          <div class="col-6">
-            <label class="block font-medium mb-2"><i class="pi pi-sign-out mr-2"></i> حالة الانصراف</label>
-            <div class="p-2 surface-100 border-round text-center font-medium"
-                [ngClass]="{'text-green-600': selectedRecord.checkOutStatus === 'On Time', 'text-red-600': selectedRecord.checkOutStatus === 'Early'}">
-              {{selectedRecord.checkOutStatus === 'Early' ? 'مبكر' : 'في الوقت'}}
+            <!-- Status Badges -->
+            <div class="flex gap-2 mt-2">
+              <span class="p-badge" [ngClass]="{
+                'bg-blue-100 text-blue-900': selectedRecord.employee.employee_type === 'permanent',
+                'bg-teal-100 text-teal-900': selectedRecord.employee.employee_type === 'temporary'
+              }">
+                <i class="pi pi-user mr-2"></i>
+                {{selectedRecord.employee.employee_type === 'permanent' ? 'موظف دائم' : 'موظف مؤقت'}}
+              </span>
+              <span class="p-badge" [ngClass]="{
+                'bg-purple-100 text-purple-900': selectedRecord.employee.work_system === 'shift',
+                'bg-orange-100 text-orange-900': selectedRecord.employee.work_system === 'hours'
+              }">
+                <i [class]="'pi mr-2 ' + (selectedRecord.employee.work_system === 'shift' ? 'pi-clock' : 'pi-hourglass')"></i>
+                {{getWorkSystemLabel(selectedRecord.employee.work_system)}}
+              </span>
             </div>
           </div>
         </div>
-
-        <!-- Attendance Periods -->
-        <div class="mt-4">
-          <h3 class="font-medium text-xl mb-3"><i class="pi pi-list mr-2"></i> تفاصيل الفترات</h3>
-          <div class="p-3 surface-100 border-round">
-            <div *ngFor="let period of selectedRecord.attendancePeriods" class="mb-2">
-              <div class="flex justify-content-between align-items-center">
-                <div>
-                  <i class="pi pi-sign-in text-green-600 mr-2"></i> {{formatTime(period.checkInTime)}}
-                </div>
-                <div>
-                  <i class="pi pi-sign-out text-red-600 mr-2"></i> 
-                  {{period.checkOutTime ? formatTime(period.checkOutTime) : '---'}}
+      </div>
+  
+      <!-- Tabs for Different Sections -->
+      <p-tabView>
+        <!-- Attendance Details Tab -->
+        <p-tabPanel header="تفاصيل الحضور">
+          <div class="grid">
+            <div class="col-6">
+              <label class="block font-medium mb-2">
+                <i class="pi pi-clock mr-2"></i>إجمالي وقت العمل
+              </label>
+              <div class="p-3 surface-100 border-round text-center font-medium">
+                {{selectedRecord.totalWorkTime}}
+              </div>
+            </div>
+            <div class="col-6">
+              <label class="block font-medium mb-2">
+                <i class="pi pi-coffee mr-2"></i>وقت الاستراحة
+              </label>
+              <div class="p-3 surface-100 border-round text-center font-medium">
+                {{selectedRecord.totalBreakTime}}
+              </div>
+            </div>
+          </div>
+  
+          <!-- Status Section based on Work System -->
+          <ng-container [ngSwitch]="selectedRecord.employee.work_system">
+            <!-- Shift System -->
+            <div *ngSwitchCase="'shift'" class="grid mt-3">
+              <div class="col-6">
+                <div class="p-3 surface-100 border-round">
+                  <div class="flex justify-content-between align-items-center">
+                    <span class="font-medium">موعد الوردية:</span>
+                    <span>{{selectedRecord.employee.job_title?.title_name}}</span>
+                  </div>
+                  <div class="flex justify-content-between align-items-center mt-2">
+                    <span class="font-medium">حالة الحضور:</span>
+                    <p-tag [severity]="selectedRecord.checkInStatus === 'Late' ? 'danger' : 'success'"
+                           [value]="selectedRecord.checkInStatus === 'Late' ? 'متأخر' : 'في الوقت'">
+                    </p-tag>
+                  </div>
                 </div>
               </div>
-              <hr class="my-2 surface-200" *ngIf="period !== selectedRecord.attendancePeriods[selectedRecord.attendancePeriods.length - 1]" />
+              <div class="col-6">
+                <div class="p-3 surface-100 border-round">
+                  <div class="flex justify-content-between align-items-center">
+                    <span class="font-medium">التأخير المسموح:</span>
+                    <span>{{selectedRecord.employee.shift?.allowed_delay_minutes}} دقيقة</span>
+                  </div>
+                  <div class="flex justify-content-between align-items-center mt-2">
+                    <span class="font-medium">حالة الانصراف:</span>
+                    <p-tag [severity]="selectedRecord.checkOutStatus === 'Early' ? 'warning' : 'success'"
+                           [value]="getCheckOutStatusLabel(selectedRecord.checkOutStatus)">
+                    </p-tag>
+                  </div>
+                </div>
+              </div>
+            </div>
+  
+            <!-- Hours System -->
+            <div *ngSwitchCase="'hours'" class="mt-3">
+              <div class="surface-100 border-round p-3">
+                <div class="grid">
+                  <div class="col-6">
+                    <div class="flex flex-column gap-2">
+                      <span><i class="pi pi-clock mr-2"></i>سعر الساعة: {{selectedRecord.employee.profession?.hourly_rate}} جنيه</span>
+                      <span><i class="pi pi-calendar mr-2"></i>سعر اليوم: {{selectedRecord.employee.profession?.daily_rate}} جنيه</span>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="flex flex-column gap-2">
+                      <span><i class="pi pi-sign-in mr-2"></i>أول حضور: {{formatTime(selectedRecord.firstCheckIn)}}</span>
+                      <span><i class="pi pi-sign-out mr-2"></i>آخر انصراف: {{selectedRecord.lastCheckOut ? formatTime(selectedRecord.lastCheckOut) : 'لم يسجل'}}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+  
+          <!-- Attendance Periods -->
+          <div class="mt-4">
+            <h3 class="font-medium mb-3">
+              <i class="pi pi-list mr-2"></i>سجلات اليوم
+            </h3>
+            <div class="surface-100 border-round p-3">
+              <div *ngFor="let period of selectedRecord.attendancePeriods; let last = last" 
+                   class="mb-2">
+                <div class="flex justify-content-between align-items-center">
+                  <div class="flex align-items-center gap-2">
+                    <i class="pi pi-sign-in text-green-600"></i>
+                    <span class="font-medium">{{formatTime(period.checkInTime)}}</span>
+                  </div>
+                  <div class="flex align-items-center gap-2">
+                    <i class="pi pi-sign-out text-red-600"></i>
+                    <span class="font-medium">{{period.checkOutTime ? formatTime(period.checkOutTime) : '---'}}</span>
+                  </div>
+                </div>
+                <hr class="my-2 surface-200" *ngIf="!last" />
+              </div>
             </div>
           </div>
-        </div>
-        
-        <!-- Footer Section -->
-        <!-- <div class="grid mt-4">
-          <div class="col-12">
-            <label class="block font-medium mb-2">
-              <i class="pi pi-exclamation-circle mr-2"></i> الإجراء التالي
-            </label>
-            <div class="p-2 surface-100 border-round text-center font-medium">
-              {{selectedRecord.nextAction === 'check-in' ? 'حضور' : 'انصراف'}}
+        </p-tabPanel>
+  
+        <!-- Employee Info Tab -->
+        <p-tabPanel header="معلومات الموظف">
+          <div class="grid">
+            <!-- Personal Information -->
+            <div class="col-12">
+              <p-fieldset legend="البيانات الشخصية" [toggleable]="true">
+                <div class="grid">
+                  <div class="col-6">
+                    <div class="flex flex-column gap-3">
+                      <div class="flex justify-content-between">
+                        <span class="font-medium">الرقم الوطني:</span>
+                        <span>{{selectedRecord.employee.national_id}}</span>
+                      </div>
+                      <div class="flex justify-content-between">
+                        <span class="font-medium">تاريخ الميلاد:</span>
+                        <span>{{selectedRecord.employee.date_of_birth | date}}</span>
+                      </div>
+                      <div class="flex justify-content-between">
+                        <span class="font-medium">مكان الميلاد:</span>
+                        <span>{{selectedRecord.employee.place_of_birth}}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="flex flex-column gap-3">
+                      <div class="flex justify-content-between">
+                        <span class="font-medium">رقم الهاتف:</span>
+                        <span>{{selectedRecord.employee.mobile_1}}</span>
+                      </div>
+                      <div class="flex justify-content-between">
+                        <span class="font-medium">العنوان:</span>
+                        <span>{{selectedRecord.employee.residence}}</span>
+                      </div>
+                      <div class="flex justify-content-between">
+                        <span class="font-medium">المؤهل العلمي:</span>
+                        <span>{{selectedRecord.employee.certificates}}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </p-fieldset>
+            </div>
+  
+            <!-- Employment Information -->
+            <div class="col-12">
+              <p-fieldset legend="البيانات الوظيفية" [toggleable]="true">
+                <div class="grid">
+                  <div class="col-6">
+                    <div class="flex flex-column gap-3">
+                      <div class="flex justify-content-between">
+                        <span class="font-medium">تاريخ التعيين:</span>
+                        <span>{{selectedRecord.employee.date_of_joining | date}}</span>
+                      </div>
+                      <div class="flex justify-content-between">
+                        <span class="font-medium">الراتب الأساسي:</span>
+                        <span>{{selectedRecord.employee.salary}} جنيه</span>
+                      </div>
+                      <div class="flex justify-content-between">
+                        <span class="font-medium">البدلات:</span>
+                        <span>{{selectedRecord.employee.allowances}} جنيه</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="flex flex-column gap-3">
+                      <div class="flex justify-content-between">
+                        <span class="font-medium">نسبة السلفة:</span>
+                        <span>{{selectedRecord.employee.advancePercentage}}%</span>
+                      </div>
+                      <div class="flex justify-content-between">
+                        <span class="font-medium">التأمينات:</span>
+                        <span>{{selectedRecord.employee.insurance_deduction}} جنيه</span>
+                      </div>
+                      <div class="flex justify-content-between">
+                        <span class="font-medium">نوع العقد:</span>
+                        <span>{{selectedRecord.employee.worker_agreement}}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </p-fieldset>
+            </div>
+  
+            <!-- Notes Section -->
+            <div class="col-12" *ngIf="selectedRecord.employee.notes">
+              <p-fieldset legend="ملاحظات" [toggleable]="true">
+                <p class="m-0">{{selectedRecord.employee.notes}}</p>
+              </p-fieldset>
             </div>
           </div>
-        </div> -->
-      </div>
-    </p-dialog>
-
+        </p-tabPanel>
+      </p-tabView>
+    </div>
+  </p-dialog>
  
  
   </div>

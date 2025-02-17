@@ -66,14 +66,14 @@ export class ListJobTitlesComponent implements OnInit {
   loading = this.jobTitleService.loading;
   error = this.jobTitleService.error;
 
-  constructor(
+  constructor (
     private jobTitleService: JobTitleService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) {
     this.jobTitle = this.initializeJobTitle();
   }
-
+  
   ngOnInit() {
     this.loadJobTitles();
   }
@@ -85,10 +85,12 @@ export class ListJobTitlesComponent implements OnInit {
       overtime_hour_value: 0,
       delay_minute_value: 0,
       shift_system: false,
-      production_system: false
+      production_system: false,
+      month_system: false,
+
       // work_systems: {
       //   custom_system: false,
-      //   hours_system: false,
+      //   month_system: false,
       //   productivity_system: false,
       //   shift_system: false
       // }

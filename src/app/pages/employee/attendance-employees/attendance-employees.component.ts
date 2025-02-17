@@ -19,12 +19,21 @@ import { AttendanceRecord, AttendanceStats } from '../../../type/attendance';
 import { AttendanceService } from '../../../core/services/attendance/attendance.service';
 import { Employee } from '../../../type/employee';
 import { EmployeeService } from '../../../core/services/employee/employee.service';
+import { TabViewModule } from 'primeng/tabview';
+import { DividerModule } from 'primeng/divider';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { FieldsetModule } from 'primeng/fieldset';
 
 @Component({
   selector: 'app-attendance-employees',
   standalone: true,
   imports: [
+    // Angular Modules
     CommonModule,
+    FormsModule,
+    
+    // PrimeNG Modules
     TableModule,
     ButtonModule,
     CalendarModule,
@@ -34,13 +43,16 @@ import { EmployeeService } from '../../../core/services/employee/employee.servic
     TagModule,
     TooltipModule,
     ChartModule,
-    FormsModule,
     DialogModule,
     ProgressBarModule,
     AvatarModule,
     BadgeModule,
-    DialogModule,
-    InputNumberModule
+    InputNumberModule,
+    TabViewModule,
+    FieldsetModule,
+    DividerModule,
+    ToastModule,
+    ConfirmDialogModule
   ],
   providers: [DatePipe],
   templateUrl: './attendance-employees.component.html',
@@ -433,6 +445,27 @@ isToday(dateString: string): boolean {
   const recordDate = new Date(dateString).toDateString(); 
   const todayDate = new Date().toDateString();
   return recordDate === todayDate;
+}
+
+
+getWorkSystemLabel(workSystem: string): string {
+  const labels:any = {
+    'shift': 'نظام ورديات',
+    'hours': 'نظام ساعات',
+    'production': 'نظام إنتاجية',
+    'monthly': 'نظام شهري'
+  };
+  return labels[workSystem] || workSystem;
+}
+
+getCheckOutStatusLabel(status: string): string {
+  const labels:any = {
+    'Early': 'مبكر',
+    'On Time': 'في الوقت',
+    'No Check-out': 'لم يسجل خروج',
+    'Recorded': 'مسجل'
+  };
+  return labels[status] || status;
 }
 
 }

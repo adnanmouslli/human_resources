@@ -25,18 +25,43 @@ export class AppMenuComponent implements OnInit {
         ]
       },
       {
-        label: 'إدارة الوارديات',
+        label: 'الحضور والانصراف',
+        items: [
+          { label: 'سجل الحضور', icon: 'pi pi-fw pi-calendar', routerLink: ['/employees/attendance'] },
+          // { label: 'تقارير الحضور', icon: 'pi pi-fw pi-file', routerLink: ['/attendance/reports'] },
+        ]
+      },
+      {
+        label: 'النظام الشهري',
+        items: [
+          // { label: 'تسجيل الدوام اليومي', icon: 'pi pi-fw pi-calendar-plus', routerLink: ['/monthly/attendance'] },
+          { label: 'سجل الدوام', icon: 'pi pi-fw pi-calendar', routerLink: ['/monthly/attendance-log'] },
+          { label: 'طلبات الإجازة', icon: 'pi pi-fw pi-envelope', routerLink: ['/monthly/leave-requests'] },
+          // { label: 'إدارة الإجازات الرسمية', icon: 'pi pi-fw pi-calendar-times', routerLink: ['/monthly/official-leaves'] },
+          { label: 'تقارير النظام الشهري', icon: 'pi pi-fw pi-file', routerLink: ['/monthly/reports'] }
+        ]
+      },
+      {
+        label: 'نظام الوارديات',
         items: [
             { label: 'عرض الوارديات', icon: 'pi pi-fw pi-list', routerLink: ['/shifts/list'] },
             // { label: 'إضافة واردية', icon: 'pi pi-fw pi-plus', routerLink: ['/shifts/add'] },
         ]
       },
       {
-        label: 'إدارة الإنتاج',
+        label: 'نظام الإنتاج',
         items: [
           { label: 'إدارة القطع', icon: 'pi pi-fw pi-box', routerLink: ['/production/pieces'] },
           { label: 'مراقبة الإنتاج', icon: 'pi pi-fw pi-eye', routerLink: ['/production/monitor'] },
           { label: 'تقارير الإنتاج', icon: 'pi pi-fw pi-chart-bar', routerLink: ['/production/reports'] },
+        ]
+      },
+      {
+        label: 'نظام الساعات',
+        items: [
+          { label: 'إدارة المهن', icon: 'pi pi-fw pi-briefcase', routerLink: ['/hours/professions'] },
+          // { label: 'سجل الساعات', icon: 'pi pi-fw pi-clock', routerLink: ['/hours/log'] },
+          { label: 'التقارير', icon: 'pi pi-fw pi-file', routerLink: ['/hours/reports'] },
         ]
       },
       {
@@ -51,26 +76,19 @@ export class AppMenuComponent implements OnInit {
         ]
       },
       {
-        label: 'الحضور والانصراف',
-        items: [
-          { label: 'سجل الحضور', icon: 'pi pi-fw pi-calendar', routerLink: ['/employees/attendance'] },
-          // { label: 'تقارير الحضور', icon: 'pi pi-fw pi-file', routerLink: ['/attendance/reports'] },
-        ]
-      },
-      {
         label: 'إدارة الرواتب',
         items: [
           { label: 'قائمة الرواتب', icon: 'pi pi-fw pi-money-bill', routerLink: ['/payroll/list'] },
           { label: 'إعداد الرواتب', icon: 'pi pi-fw pi-cog', routerLink: ['/payroll/setup'] },
         ]
       },
-      {
-        label: 'الإجازات',
-        items: [
-          { label: 'طلبات الإجازة', icon: 'pi pi-fw pi-envelope', routerLink: ['/leaves/requests'] },
-          { label: 'سجل الإجازات', icon: 'pi pi-fw pi-file', routerLink: ['/leaves/log'] },
-        ]
-      },
+      // {
+      //   label: 'الإجازات',
+      //   items: [
+      //     { label: 'طلبات الإجازة', icon: 'pi pi-fw pi-envelope', routerLink: ['/leaves/requests'] },
+      //     { label: 'سجل الإجازات', icon: 'pi pi-fw pi-file', routerLink: ['/leaves/log'] },
+      //   ]
+      // },
       // {
       //   label: 'التقييمات',
       //   items: [

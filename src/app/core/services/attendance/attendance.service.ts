@@ -39,8 +39,9 @@ export class AttendanceService {
       checkInTime: checkInTime || null
     }).pipe(
       tap(newRecord => {
-        const currentRecords = this.attendanceSubject.getValue();
-        const index = currentRecords.findIndex(r => r.employee.id === employeeId);
+        try{
+          const currentRecords = this.attendanceSubject.getValue();
+          const index = currentRecords.findIndex(r => r.employee.id === employeeId);
         
         if (index !== -1) {
           // Update existing record
@@ -49,6 +50,9 @@ export class AttendanceService {
         } else {
           // Add new record
           this.attendanceSubject.next([...currentRecords, newRecord]);
+        }
+        } catch (e) {
+          console.log("error:" , e);
         }
       }),
       catchError(this.handleError)

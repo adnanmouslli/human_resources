@@ -44,6 +44,16 @@ export const routes: Routes = [
                   import('./pages/production/production.module').then((m) => m.ProductionModule)
           },
           {
+            path: 'hours',
+            loadChildren: () =>
+                  import('./pages/hours/hours.module').then((m) => m.HoursModule)
+          },
+          {
+            path: 'monthly',
+            loadChildren: () =>
+                  import('./pages/months/months.module').then((m) => m.MonthsModule)
+          },
+          {
             path: 'settings/dev-monitor',
             component: DevMonitorComponent
           }

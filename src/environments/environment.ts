@@ -18,7 +18,9 @@ export const environment: Environment = {
     attendances: '/attendances',
     advances: '/advances',
     productionPieces: '/production-pieces',
-    productionMonitoring: '/production-monitoring'
+    productionMonitoring: '/production-monitoring',
+    professions: "/professions",
+    monthlyAttendance: "/monthly-attendance"
   },
   // @ts-ignore
   features: {

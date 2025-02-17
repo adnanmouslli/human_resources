@@ -1,0 +1,160 @@
+<app-loading [show]="loading()" type="circle" message="جاري المعالجة..."></app-loading>
+
+<div class="card">
+    <p-toast></p-toast>
+    <p-confirmDialog [style]="{width: '450px'}" [rtl]="true"></p-confirmDialog>
+    
+    <p-toolbar styleClass="mb-4">
+        <div class="p-toolbar-group-start">
+            <h2 class="text-2xl font-bold m-0">سجل الدوام اليومي</h2>
+        </div>
+        <div class="p-toolbar-group-end">
+            <p-button 
+                label="تسجيل حضور"
+                icon="pi pi-plus"
+                styleClass="p-button-raised p-button-primary" 
+                [rounded]="true"
+                (click)="showCreateDialog()">
+            </p-button>
+        </div>
+    </p-toolbar>
+
+    <p-table 
+        [value]="attendanceRecords() || []" 
+        [loading]="loading()"
+        [rows]="10" 
+        [paginator]="true"
+        [rowsPerPageOptions]="[10,25,50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="عرض {first} إلى {last} من أصل {totalRecords} سجل"
+        [rowHover]="true"
+        styleClass="p-datatable-gridlines p-datatable-striped">
+        
+        <ng-template pTemplate="header">
+            <tr>
+                <th>#</th>
+                <th>الموظف</th>
+                <th>نوع الدوام</th>
+                <th>وقت الحضور</th>
+                <th>وقت الانصراف</th>
+                <th>ملاحظات</th>
+                <th>الإجراءات</th>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-record let-i="rowIndex">
+            <tr>
+                <td>{{i + 1}}</td>
+                <td>{{record?.employee?.name || '-'}}</td>
+                <td>
+                    <p-tag [severity]="getStatusSeverity(record?.attendance_type)"
+                           [value]="getAttendanceTypeLabel(record?.attendance_type)">
+                    </p-tag>
+                </td>
+                <td>{{record?.check_in || '-'}}</td>
+                <td>{{record?.check_out || '-'}}</td>
+                <td>{{record?.notes || '-'}}</td>
+                <td>
+                    <div class="flex gap-2">
+                        <p-button 
+                            icon="pi pi-sign-out" 
+                            styleClass="p-button-rounded p-button-success p-button-text"
+                            pTooltip="تسجيل انصراف"
+                            tooltipPosition="top"
+                            [disabled]="!!record?.check_out"
+                            (click)="checkOut(record.id)"
+                            *ngIf="record?.id">
+                        </p-button>
+                        <p-button 
+                            icon="pi pi-pencil" 
+                            styleClass="p-button-rounded p-button-warning p-button-text"
+                            pTooltip="تعديل"
+                            tooltipPosition="top"
+                            (click)="editAttendance(record)"
+                            *ngIf="record?.id">
+                        </p-button>
+                        <p-button 
+                            icon="pi pi-trash" 
+                            styleClass="p-button-rounded p-button-danger p-button-text"
+                            pTooltip="حذف"
+                            tooltipPosition="top"
+                            (click)="deleteAttendance(record.id)"
+                            *ngIf="record?.id">
+                        </p-button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="7" class="text-center">لا توجد سجلات متاحة</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<!-- دايلوج إنشاء/تعديل الحضور -->
+<p-dialog 
+    [(visible)]="displayDialog" 
+    [header]="dialogHeader"
+    [modal]="true"
+    [style]="{width: '500px'}"
+    [draggable]="false"
+    [resizable]="false"
+    styleClass="p-fluid"
+    [rtl]="true">
+    
+    <div class="field">
+        <label for="employee">الموظف</label>
+        <p-dropdown 
+            [(ngModel)]="selectedAttendanceEmployee"
+            [options]="monthlyEmployees"
+            optionLabel="full_name"
+            [disabled]="isEditMode"
+            [filter]="true"
+            filterBy="full_name"
+            placeholder="اختر موظف"
+            [showClear]="true"
+            [ngClass]="{'ng-invalid ng-dirty': submitted && !selectedAttendanceEmployee}">
+        </p-dropdown>
+        <small class="p-error" *ngIf="submitted && !selectedAttendanceEmployee">الموظف مطلوب</small>
+    </div>
+
+    <div class="field">
+        <label for="attendance_type">نوع الدوام</label>
+        <p-dropdown 
+            [(ngModel)]="attendanceForm.attendance_type"
+            [options]="attendanceTypes"
+            optionLabel="label"
+            optionValue="value"
+            [ngClass]="{'ng-invalid ng-dirty': submitted && !attendanceForm.attendance_type}">
+        </p-dropdown>
+        <small class="p-error" *ngIf="submitted && !attendanceForm.attendance_type">نوع الدوام مطلوب</small>
+    </div>
+
+    <div class="field">
+        <div class="flex align-items-center">
+            <p-checkbox [(ngModel)]="attendanceForm.is_excused_absence" 
+                       [binary]="true" 
+                       inputId="excused">
+            </p-checkbox>
+            <label for="excused" class="ml-2">غياب بعذر</label>
+        </div>
+    </div>
+
+    <div class="field" *ngIf="attendanceForm.is_excused_absence">
+        <label for="excuse_document">مستند العذر</label>
+        <input type="text" pInputText [(ngModel)]="attendanceForm.excuse_document"/>
+    </div>
+
+    <div class="field">
+        <label for="notes">ملاحظات</label>
+        <textarea pInputTextarea [(ngModel)]="attendanceForm.notes" rows="3"></textarea>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <button pButton label="إلغاء" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
+        <button pButton label="حفظ" icon="pi pi-check" class="p-button-text" (click)="submitAttendance()"></button>
+    </ng-template>
+</p-dialog>
