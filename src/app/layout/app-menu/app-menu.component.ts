@@ -36,7 +36,7 @@ export class AppMenuComponent implements OnInit {
         items: [
           // { label: 'تسجيل الدوام اليومي', icon: 'pi pi-fw pi-calendar-plus', routerLink: ['/monthly/attendance'] },
           { label: 'سجل الدوام', icon: 'pi pi-fw pi-calendar', routerLink: ['/monthly/attendance-log'] },
-          { label: 'طلبات الإجازة', icon: 'pi pi-fw pi-envelope', routerLink: ['/monthly/leave-requests'] },
+          // { label: 'طلبات الإجازة', icon: 'pi pi-fw pi-envelope', routerLink: ['/monthly/leave-requests'] },
           // { label: 'إدارة الإجازات الرسمية', icon: 'pi pi-fw pi-calendar-times', routerLink: ['/monthly/official-leaves'] },
           { label: 'تقارير النظام الشهري', icon: 'pi pi-fw pi-file', routerLink: ['/monthly/reports'] }
         ]
@@ -78,7 +78,6 @@ export class AppMenuComponent implements OnInit {
       {
         label: 'إدارة الرواتب',
         items: [
-          { label: 'قائمة الرواتب', icon: 'pi pi-fw pi-money-bill', routerLink: ['/payroll/list'] },
           { label: 'إعداد الرواتب', icon: 'pi pi-fw pi-cog', routerLink: ['/payroll/setup'] },
         ]
       },

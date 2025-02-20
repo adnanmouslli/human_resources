@@ -56,6 +56,12 @@ export const routes: Routes = [
           {
             path: 'settings/dev-monitor',
             component: DevMonitorComponent
+          },
+          {
+            path: 'payroll',
+            loadChildren: () =>
+              import('./pages/payrolls/payrolls.module').then((m) => m.PayrollsModule)
+            
           }
       ],
     },

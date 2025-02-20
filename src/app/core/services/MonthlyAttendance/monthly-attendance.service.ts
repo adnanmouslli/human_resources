@@ -9,7 +9,7 @@ export interface MonthlyAttendance {
   employee?: Employee;
   employee_id: number;
   date: string;
-  attendance_type: 'full_day' | 'half_day' | 'online_day';
+  attendance_type: 'full_day' | 'half_day' | 'online_day' | 'absent';
   check_in: string | null;
   check_out: string | null;
   is_excused_absence: boolean;

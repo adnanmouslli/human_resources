@@ -184,7 +184,9 @@ export class ListEmployeesComponent implements OnInit, AfterViewInit {
         bodyTemplate: null,
         statusOptions: [
           { label: 'نظام الورديات', value: 'shift' },
-          { label: 'نظام الساعات', value: 'hours' }
+          { label: 'نظام الساعات', value: 'hours' },
+          { label: 'نظام الشهري', value: 'months' },
+          { label: 'نظام الانتاج', value: 'productivity' },
         ]
       }
     ];
@@ -216,8 +218,18 @@ export class ListEmployeesComponent implements OnInit, AfterViewInit {
     });
   }
 
-  getWorkSystemLabel(value: string): string {
-    return value === 'shift' ? 'نظام الورديات' : 'نظام الساعات';
+  // getWorkSystemLabel(value: string): string {
+  //   return value === 'shift' ? 'نظام الورديات' : 'نظام الساعات';
+  // }
+
+  getWorkSystemLabel(workSystem: string): string {
+    const labels:any = {
+      'shift': 'نظام ورديات',
+      'hours': 'نظام ساعات',
+      'productivity': 'نظام إنتاجية',
+      'months': 'نظام شهري'
+    };
+    return labels[workSystem] || workSystem;
   }
 
   formatPhoneNumber(phone: string | null): string {

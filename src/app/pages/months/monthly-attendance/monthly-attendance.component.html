@@ -51,8 +51,8 @@
                            [value]="getAttendanceTypeLabel(record?.attendance_type)">
                     </p-tag>
                 </td>
-                <td>{{record?.check_in || '-'}}</td>
-                <td>{{record?.check_out || '-'}}</td>
+                <td>{{ formatTime(record?.check_in) }}</td>
+                <td>{{ formatTime(record?.check_out) }}</td>                
                 <td>{{record?.notes || '-'}}</td>
                 <td>
                     <div class="flex gap-2">
@@ -63,8 +63,9 @@
                             tooltipPosition="top"
                             [disabled]="!!record?.check_out"
                             (click)="checkOut(record.id)"
-                            *ngIf="record?.id">
+                            *ngIf="record?.id && record?.attendance_type !== 'absent'">
                         </p-button>
+
                         <p-button 
                             icon="pi pi-pencil" 
                             styleClass="p-button-rounded p-button-warning p-button-text"
@@ -81,6 +82,14 @@
                             (click)="deleteAttendance(record.id)"
                             *ngIf="record?.id">
                         </p-button>
+                        <p-button 
+                            icon="pi pi-info-circle" 
+                            styleClass="p-button-rounded p-button-info p-button-text"
+                            pTooltip="تفاصيل سبب الغياب"
+                            tooltipPosition="top"
+                            (click)="showAbsenceDetails(record.excuse_document)"
+                            *ngIf="record?.attendance_type === 'absent'">
+                        </p-button>
                     </div>
                 </td>
             </tr>
@@ -93,6 +102,8 @@
         </ng-template>
     </p-table>
 </div>
+
+
 
 <!-- دايلوج إنشاء/تعديل الحضور -->
 <p-dialog 
@@ -128,12 +139,14 @@
             [options]="attendanceTypes"
             optionLabel="label"
             optionValue="value"
+            (onChange)="handleAttendanceTypeChange()"
             [ngClass]="{'ng-invalid ng-dirty': submitted && !attendanceForm.attendance_type}">
         </p-dropdown>
         <small class="p-error" *ngIf="submitted && !attendanceForm.attendance_type">نوع الدوام مطلوب</small>
     </div>
 
-    <div class="field">
+    <!-- سبب الغياب يظهر فقط إذا كان الموظف غائبًا -->
+    <div class="field" *ngIf="attendanceForm.attendance_type === 'absent'">
         <div class="flex align-items-center">
             <p-checkbox [(ngModel)]="attendanceForm.is_excused_absence" 
                        [binary]="true" 
@@ -142,10 +155,9 @@
             <label for="excused" class="ml-2">غياب بعذر</label>
         </div>
     </div>
-
-    <div class="field" *ngIf="attendanceForm.is_excused_absence">
-        <label for="excuse_document">مستند العذر</label>
-        <input type="text" pInputText [(ngModel)]="attendanceForm.excuse_document"/>
+    <div class="field" *ngIf="attendanceForm.is_excused_absence === true">
+        <label for="absence_reason">سبب الغياب</label>
+        <textarea pInputTextarea [(ngModel)]="attendanceForm.excuse_document" rows="3"></textarea>
     </div>
 
     <div class="field">
@@ -156,5 +168,13 @@
     <ng-template pTemplate="footer">
         <button pButton label="إلغاء" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
         <button pButton label="حفظ" icon="pi pi-check" class="p-button-text" (click)="submitAttendance()"></button>
+    </ng-template>
+</p-dialog>
+
+<!-- دايلوج عرض سبب الغياب -->
+<p-dialog [(visible)]="absenceDetailsDialog" header="تفاصيل سبب الغياب" [modal]="true" [style]="{width: '400px'}" [rtl]="true">
+    <p>{{ selectedAbsenceReason || 'لا يوجد سبب مسجل' }}</p>
+    <ng-template pTemplate="footer">
+        <button pButton label="إغلاق" icon="pi pi-times" class="p-button-text" (click)="absenceDetailsDialog = false"></button>
     </ng-template>
 </p-dialog>

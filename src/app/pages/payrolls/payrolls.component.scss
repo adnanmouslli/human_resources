@@ -1,0 +1,53 @@
+:host ::ng-deep {
+    .p-card {
+        margin-bottom: 1rem;
+    }
+
+    .p-progressbar {
+        height: 0.5rem;
+        background: #dee2e6;
+
+        .p-progressbar-value {
+            transition: width 1s ease-in-out;
+        }
+    }
+
+   
+
+    .p-badge {
+        &.p-badge-info {
+            background: var(--primary-color);
+        }
+    }
+
+    .surface-50 {
+        transition: transform 0.2s;
+
+        &:hover {
+            transform: translateY(-2px);
+        }
+    }
+
+    .stat-card {
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        
+        &:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    }
+
+    .chart-container {
+        position: relative;
+        min-height: 300px;
+    }
+
+    .summary-footer {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 6px;
+        margin-top: 1rem;
+    }
+
+    
+}

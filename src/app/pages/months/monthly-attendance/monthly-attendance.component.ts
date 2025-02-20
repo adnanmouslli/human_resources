@@ -79,7 +79,8 @@ export class MonthlyAttendanceComponent implements OnInit {
     attendanceTypes = [
         { label: 'يوم كامل', value: 'full_day' },
         { label: 'نصف يوم', value: 'half_day' },
-        { label: 'أون لاين', value: 'online_day' }
+        { label: 'أون لاين', value: 'online_day' },
+        { label: 'غائب', value: 'absent' }
     ];
 
     ngOnInit() {
@@ -245,6 +246,21 @@ export class MonthlyAttendanceComponent implements OnInit {
         return true;
     }
 
+
+absenceDetailsDialog: boolean = false;
+selectedAbsenceReason: string = '';
+
+showAbsenceDetails(reason: string) {
+    this.selectedAbsenceReason = reason;
+    this.absenceDetailsDialog = true;
+}
+
+handleAttendanceTypeChange() {
+    if (this.attendanceForm.attendance_type !== 'absent') {
+        this.attendanceForm.excuse_document = ''; 
+    }
+}
+
     private handleError(error: any) {
         console.error('Error:', error);
         this.toastService.error(
@@ -262,11 +278,13 @@ export class MonthlyAttendanceComponent implements OnInit {
                 return 'warning';
             case 'online_day':
                 return 'info';
+            case 'absent':
+                return 'danger';
             default:
                 return 'danger';
         }
     }
-
+    
     getAttendanceTypeLabel(type: string | undefined): string {
         switch (type) {
             case 'full_day':
@@ -275,8 +293,18 @@ export class MonthlyAttendanceComponent implements OnInit {
                 return 'نصف يوم';
             case 'online_day':
                 return 'أون لاين';
+            case 'absent':
+                return 'غائب';
             default:
                 return 'غير محدد';
         }
     }
+
+    formatTime(time: string | null): string {
+        if (!time) return '-';
+        const date = new Date(`1970-01-01T${time}`);
+        return date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+
+    
 }

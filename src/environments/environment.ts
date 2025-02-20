@@ -20,7 +20,8 @@ export const environment: Environment = {
     productionPieces: '/production-pieces',
     productionMonitoring: '/production-monitoring',
     professions: "/professions",
-    monthlyAttendance: "/monthly-attendance"
+    monthlyAttendance: "/monthly-attendance",
+    payroll: "/payroll",
   },
   // @ts-ignore
   features: {

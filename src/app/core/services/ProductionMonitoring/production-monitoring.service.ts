@@ -27,7 +27,7 @@ export class ProductionMonitoringService {
   constructor() {
     this.apiEndpoint = this.configService.getApiEndpoint('productionMonitoring');
   }
-
+  
   getMonitoringRecords(params?: MonitoringFilter): Observable<ProductionMonitoring[]> {
     this.loadingSignal.set(true);
 
