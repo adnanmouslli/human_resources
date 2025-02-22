@@ -19,7 +19,7 @@ import { ProductionMonitoringService } from '../../../core/services/ProductionMo
 import { EmployeeService } from '../../../core/services/employee/employee.service';
 import { ProductionPiece, ProductionPiecesService } from '../../../core/services/ProductionPieces/production-pieces.service';
 import { Employee } from '../../../type/employee';
-import { groupBy, map, sumBy, chain } from 'lodash';
+import { sumBy, chain } from 'lodash';
 import { TooltipModule } from 'primeng/tooltip';
 
 import { forkJoin, Observable } from 'rxjs';

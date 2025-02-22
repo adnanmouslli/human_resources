@@ -53,10 +53,10 @@ export const routes: Routes = [
             loadChildren: () =>
                   import('./pages/months/months.module').then((m) => m.MonthsModule)
           },
-          {
-            path: 'settings/dev-monitor',
-            component: DevMonitorComponent
-          },
+          // {
+          //   path: 'settings/dev-monitor',
+          //   component: DevMonitorComponent
+          // },
           {
             path: 'payroll',
             loadChildren: () =>
