@@ -45,10 +45,15 @@ export class AuthService {
   login(credentials: LoginCredentials): Observable<any> {
     return this.http.post<any>(this.loginEndpoint, credentials).pipe(
       tap(response => { 
-        console.log(response.status)
-        if (response.status === 204) return;
+        try {
+          console.log(response.status)
+          if (response.status === 204) return;
+  
+          this.handleSuccessfulLogin(response)
 
-        this.handleSuccessfulLogin(response)
+        }catch(e) {
+          console.log("error", e);
+        }
       }),
       catchError(this.handleLoginError)
     );
