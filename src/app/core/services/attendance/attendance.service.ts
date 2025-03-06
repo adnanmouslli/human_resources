@@ -33,26 +33,38 @@ export class AttendanceService {
     );
   }
 
-  checkIn(employeeId: number, checkInTime?: string): Observable<AttendanceRecord> {
-    return this.http.post<AttendanceRecord>(`${this.apiEndpoint}/checkin`, {
-      empId: employeeId,
-      checkInTime: checkInTime || null
-    }).pipe(
+  checkIn(employeeId: number, customTime?: string, reason?: string): Observable<AttendanceRecord> {
+    // بناء الكائن المرسل للخادم
+    const payload: any = {
+      empId: employeeId
+    };
+    
+    // إضافة وقت حضور مخصص إذا تم تقديمه
+    if (customTime) {
+      payload.checkInTime = customTime;
+    }
+    
+    // إضافة سبب الدخول إذا تم تقديمه
+    if (reason) {
+      payload.checkInReason = reason;
+    }
+    
+    return this.http.post<AttendanceRecord>(`${this.apiEndpoint}/checkin`, payload).pipe(
       tap(newRecord => {
-        try{
+        try {
           const currentRecords = this.attendanceSubject.getValue();
           const index = currentRecords.findIndex(r => r.employee.id === employeeId);
         
-        if (index !== -1) {
-          // Update existing record
-          currentRecords[index] = newRecord;
-          this.attendanceSubject.next([...currentRecords]);
-        } else {
-          // Add new record
-          this.attendanceSubject.next([...currentRecords, newRecord]);
-        }
+          if (index !== -1) {
+            // تحديث السجل الموجود
+            currentRecords[index] = newRecord;
+            this.attendanceSubject.next([...currentRecords]);
+          } else {
+            // إضافة سجل جديد
+            this.attendanceSubject.next([...currentRecords, newRecord]);
+          }
         } catch (e) {
-          console.log("error:" , e);
+          console.log("error:", e);
         }
       }),
       catchError(this.handleError)
@@ -61,13 +73,26 @@ export class AttendanceService {
 
 
  
-  checkOut(employeeId: number, productivity?: number): Observable<AttendanceRecord> {
-    const payload = { 
-      empId: employeeId,
-      productionQuantity: productivity 
+  checkOut(employeeId: number, customTime?: string, reason?: string): Observable<AttendanceRecord> {
+    // إنشاء كائن البيانات المرسلة
+    const payload: any = { 
+      empId: employeeId
     };
+
+    // إضافة وقت انصراف مخصص إذا كان محددًا
+    if (customTime) {
+      payload.checkOutTime = customTime;
+    }
+    
+    // إضافة سبب الخروج إذا كان محددًا
+    if (reason) {
+      payload.checkOutReason = reason;
+    }
+    
+    // إرسال الطلب إلى الخادم
     return this.http.post<AttendanceRecord>(`${this.apiEndpoint}/checkout`, payload).pipe(
       tap(updatedRecord => {
+        // تحديث بيانات الحضور المحفوظة محليًا
         const currentRecords = this.attendanceSubject.getValue();
         const index = currentRecords.findIndex(r => r.employee.id === employeeId);
         

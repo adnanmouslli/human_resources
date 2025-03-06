@@ -111,6 +111,12 @@
     </div>
 
     <div class="field">
+      <label>نوع القيمة</label>
+      <p-selectButton [options]="rateTypeOptions" [(ngModel)]="selectedRateType" optionLabel="label" optionValue="value"></p-selectButton>
+      <small class="p-error" *ngIf="submitted && !selectedRateType">يرجى اختيار نوع القيمة</small>
+    </div>
+
+    <div class="field" *ngIf="showHourlyRate()">
       <label for="hourly_rate">قيمة الساعة</label>
       <p-inputNumber 
         [(ngModel)]="profession.hourly_rate" 
@@ -119,12 +125,12 @@
         [maxFractionDigits]="2"
         [min]="0"
         placeholder="0.00"
-        [ngClass]="{'ng-invalid ng-dirty': submitted && !profession.hourly_rate}"
+        [ngClass]="{'ng-invalid ng-dirty': submitted && showHourlyRate() && !profession.hourly_rate}"
       ></p-inputNumber>
-      <small class="p-error" *ngIf="submitted && !profession.hourly_rate">قيمة الساعة مطلوبة</small>
+      <small class="p-error" *ngIf="submitted && showHourlyRate() && !profession.hourly_rate">قيمة الساعة مطلوبة</small>
     </div>
 
-    <div class="field">
+    <div class="field" *ngIf="showDailyRate()">
       <label for="daily_rate">القيمة اليومية</label>
       <p-inputNumber 
         [(ngModel)]="profession.daily_rate" 
@@ -133,9 +139,9 @@
         [maxFractionDigits]="2"
         [min]="0"
         placeholder="0.00"
-        [ngClass]="{'ng-invalid ng-dirty': submitted && !profession.daily_rate}"
+        [ngClass]="{'ng-invalid ng-dirty': submitted && showDailyRate() && !profession.daily_rate}"
       ></p-inputNumber>
-      <small class="p-error" *ngIf="submitted && !profession.daily_rate">القيمة اليومية مطلوبة</small>
+      <small class="p-error" *ngIf="submitted && showDailyRate() && !profession.daily_rate">القيمة اليومية مطلوبة</small>
     </div>
 
     <ng-template pTemplate="footer">

@@ -25,6 +25,7 @@ import { Advance , EmployeeAdvancesService } from '../../../core/services/advanc
 import { LoadingComponent } from '../../../components/ui/loading/loading.component';
 import { Employee } from '../../../type/employee';
 import { ToastService } from '../../../core/services/toast.service';
+import { PayrollService } from '../../../core/services/payroll/payroll.service';
 
 @Component({
   selector: 'app-employee-advances',
@@ -58,6 +59,7 @@ export class EmployeeAdvancesComponent implements OnInit {
   private advancesService = inject(EmployeeAdvancesService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+  private PayrollService = inject(PayrollService);
 
   // Access signals from service
   advances = this.advancesService.advances;
@@ -139,109 +141,125 @@ export class EmployeeAdvancesComponent implements OnInit {
     }
   }
 
- saveAdvance() {
-  this.submitted = true;
-
-  if (!this.advance.amount || !this.advance.document_number || 
-      (!this.advance.id && !this.selectedEmployee)) {
-    return;
-  }
-
-  const employeeId = this.advance.id ? this.advance.employee_id : this.selectedEmployee?.id;
-
-  if (!employeeId) {
-    this.messageService.add({
-      severity: 'error',
-      summary: 'خطأ',
-      detail: 'لم يتم تحديد الموظف'
-    });
-    return;
-  }
-
-  this.advancesService.getEmployeeAdvancesTotal(employeeId).subscribe({
-    next: (data) => {
-      const totalAdvancesThisMonth = data.total_advances_for_current_month || 0;
-
-
-      const employeeList = this.advancesService.employees(); 
-      const employee = employeeList.find(emp => emp.id === employeeId);
-
-      if (!employee) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'خطأ',
-          detail: 'لم يتم العثور على بيانات الموظف'
-        });
-        return;
-      }
-
-      const salary = employee.salary || 0; // تأكد من أن الراتب متوفر
-      const maxAllowedAdvance = employee.salary * employee.advancePercentage!;
-
-      const newTotal = totalAdvancesThisMonth + this.advance.amount;
-
-      console.log(newTotal ,  maxAllowedAdvance  );
-
-      if (newTotal > maxAllowedAdvance) {
-        this.toastService.error(`الموظف تجاوز الحد المسموح للسلف. الحد المسموح: ${maxAllowedAdvance}, المجموع الحالي: ${newTotal}` , 'رفض العملية');
-        return;
-      }
-
-      // إذا كان كل شيء صحيحًا، يتم تنفيذ الإضافة أو التحديث
-      if (this.advance.id) {
-        this.advancesService.updateAdvance(this.advance.id, this.advance).subscribe({
-          next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'نجاح',
-              detail: 'تم تحديث السلفة بنجاح'
-            });
-            this.hideDialog();
-          },
-          error: () => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'خطأ',
-              detail: 'حدث خطأ أثناء تحديث السلفة'
-            });
-          }
-        });
-
-      } else {
-        const newAdvance = {
-          ...this.advance,
-          employee_id: employeeId
-        };
-
-        this.advancesService.createAdvance(newAdvance).subscribe({
-          next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'نجاح',
-              detail: 'تم إضافة السلفة بنجاح'
-            });
-            this.hideDialog();
-          },
-          error: () => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'خطأ',
-              detail: 'حدث خطأ أثناء إضافة السلفة'
-            });
-          }
-        });
-      }
-    },
-    error: () => {
+  saveAdvance() {
+    this.submitted = true;
+  
+    if (!this.advance.amount || !this.advance.document_number || 
+        (!this.advance.id && !this.selectedEmployee)) {
+      return;
+    }
+  
+    const employeeId = this.advance.id ? this.advance.employee_id : this.selectedEmployee?.id;
+  
+    if (!employeeId) {
       this.messageService.add({
         severity: 'error',
         summary: 'خطأ',
-        detail: 'تعذر جلب بيانات السلف الشهرية'
+        detail: 'لم يتم تحديد الموظف'
       });
+      return;
     }
-  });
-}
-
+  
+    // الحصول على الشهر والسنة الحاليين
+    const today = new Date();
+    const currentMonth = today.getMonth() + 1; // getMonth() يبدأ من 0
+    const currentYear = today.getFullYear();
+  
+    // حساب راتب الموظف الحالي باستخدام الخدمة الجديدة
+    this.PayrollService.calculateEmployeePayroll(employeeId, {
+      month: currentMonth,
+      year: currentYear
+    }).subscribe({
+      next: (payrollData) => {
+        // الحصول على الراتب الإجمالي الحالي
+        const netSalary = parseFloat(payrollData.salary_details.net_salary);
+  
+        
+            const employeeList = this.advancesService.employees(); 
+            const employee = employeeList.find(emp => emp.id === employeeId);
+  
+            if (!employee) {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'خطأ',
+                detail: 'لم يتم العثور على بيانات الموظف'
+              });
+              return;
+            }
+  
+            // استخدام الراتب الإجمالي الحالي بدلاً من الراتب الأساسي
+            const maxAllowedAdvance = netSalary * employee.advancePercentage!;
+  
+            const newTotal = this.advance.amount;
+  
+            console.log('صافي الراتب الحالي:', netSalary);
+            console.log('السلفة الجديدة:', this.advance.amount);
+            console.log('المجموع الكلي للسلف:', newTotal);
+            console.log('الحد الأقصى المسموح به:', maxAllowedAdvance);
+  
+            if (newTotal > maxAllowedAdvance) {
+              this.toastService.error(
+                `الموظف تجاوز الحد المسموح للسلف. الحد المسموح: ${this.PayrollService.formatCurrency(maxAllowedAdvance)}, السلفة الحالية: ${this.PayrollService.formatCurrency(newTotal)}`, 
+                'رفض العملية'
+              );
+              return;
+            }
+  
+            // إذا كان كل شيء صحيحًا، يتم تنفيذ الإضافة أو التحديث
+            if (this.advance.id) {
+              this.advancesService.updateAdvance(this.advance.id, this.advance).subscribe({
+                next: () => {
+                  this.messageService.add({
+                    severity: 'success',
+                    summary: 'نجاح',
+                    detail: 'تم تحديث السلفة بنجاح'
+                  });
+                  this.hideDialog();
+                },
+                error: () => {
+                  this.messageService.add({
+                    severity: 'error',
+                    summary: 'خطأ',
+                    detail: 'حدث خطأ أثناء تحديث السلفة'
+                  });
+                }
+              });
+            } else {
+              const newAdvance = {
+                ...this.advance,
+                employee_id: employeeId
+              };
+  
+              this.advancesService.createAdvance(newAdvance).subscribe({
+                next: () => {
+                  this.messageService.add({
+                    severity: 'success',
+                    summary: 'نجاح',
+                    detail: 'تم إضافة السلفة بنجاح'
+                  });
+                  this.hideDialog();
+                },
+                error: () => {
+                  this.messageService.add({
+                    severity: 'error',
+                    summary: 'خطأ',
+                    detail: 'حدث خطأ أثناء إضافة السلفة'
+                  });
+                }
+              });
+            }
+        
+      },
+      error: (error:any) => {
+        console.error('خطأ في حساب راتب الموظف:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'خطأ',
+          detail: 'تعذر حساب الراتب الإجمالي الحالي للموظف'
+        });
+      }
+    });
+  }
 
   confirmDelete(advance: Advance) {
     this.confirmationService.confirm({

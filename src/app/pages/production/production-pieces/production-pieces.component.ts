@@ -11,6 +11,7 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
+import { InputSwitchModule } from 'primeng/inputswitch'; // إضافة InputSwitch
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ProductionPiecesService, ProductionPiece, PriceLevel } from '../../../core/services/ProductionPieces/production-pieces.service';
 import { LoadingComponent } from '../../../components/ui/loading/loading.component';
@@ -31,6 +32,7 @@ import { LoadingComponent } from '../../../components/ui/loading/loading.compone
    ConfirmDialogModule,
    TooltipModule,
    TagModule,
+   InputSwitchModule, // إضافة InputSwitch للمكون
    LoadingComponent
  ],
  providers: [ConfirmationService, MessageService],
@@ -82,7 +84,8 @@ export class ProductionPiecesComponent implements OnInit {
        C: 0,
        D: 0,
        E: 0
-     }
+     },
+     is_active: true // القيمة الافتراضية: مفعّل
    };
  }
 
@@ -152,6 +155,31 @@ export class ProductionPiecesComponent implements OnInit {
    });
  }
 
+ // دالة جديدة لتبديل حالة تفعيل القطعة
+ toggleActivation(piece: ProductionPiece, event: Event) {
+   event.stopPropagation(); // منع انتشار الحدث عند النقر على زر التفعيل
+
+   if (!piece.id) return;
+
+   this.piecesService.togglePieceActivation(piece.id).subscribe({
+     next: (response) => {
+       const status = response.piece.is_active ? 'تفعيل' : 'إيقاف';
+       this.messageService.add({
+         severity: 'success',
+         summary: 'تم بنجاح',
+         detail: `تم ${status} القطعة بنجاح`
+       });
+     },
+     error: (error) => {
+       this.messageService.add({
+         severity: 'error',
+         summary: 'خطأ',
+         detail: error.message || 'حدث خطأ أثناء تغيير حالة القطعة'
+       });
+     }
+   });
+ }
+
  validatePrices(): boolean {
    return !Object.values(this.piece.price_levels).some(price => price === 0);
  }
@@ -208,5 +236,15 @@ export class ProductionPiecesComponent implements OnInit {
 
  getQualitySeverity(grade: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' {
    return this.piecesService.getLevelSeverity(grade);
+ }
+
+ // دالة لتحديد حالة القطعة
+ getStatusLabel(isActive: boolean | undefined): string {
+   return isActive ? 'مفعّلة' : 'متوقفة';
+ }
+
+ // دالة لتحديد تصنيف حالة القطعة
+ getStatusSeverity(isActive: boolean | undefined): 'success' | 'danger' {
+   return isActive ? 'success' : 'danger';
  }
 }

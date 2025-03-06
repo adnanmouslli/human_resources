@@ -170,12 +170,12 @@
         <!-- الشهادة -->
         <div class="col-12 md:col-6 lg:col-4 mb-4">
           <label class="block font-medium mb-2">الشهادة</label>
-          <p-inputGroup>
-            <input pInputText formControlName="certificates" placeholder="أدخل الشهادة">
-            <p-inputGroupAddon>
-              <i class="pi pi-file"></i>
-            </p-inputGroupAddon>
-          </p-inputGroup>
+          <div class="p-inputgroup">
+            <input type="file" (change)="onFileSelected($event)" class="hidden" #fileInput accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+            <input pInputText [value]="selectedFileName || 'لم يتم اختيار ملف'" class="w-full" readonly>
+            <button type="button" pButton icon="pi pi-upload" (click)="fileInput.click()" class="p-button-primary"></button>
+          </div>
+          <small *ngIf="selectedFile" class="text-success mt-1">تم اختيار: {{selectedFileName}}</small>
         </div>
       </div>
     </p-card>
@@ -239,7 +239,7 @@
         </div>
 
         <div class="col-12 md:col-6 lg:col-4 mb-4">
-          <label class="block font-medium mb-2">رقم الجوال الإضافي</label>
+          <label class="block font-medium mb-2">رقم الطوارئ</label>
           <p-inputGroup>
             <input pInputText formControlName="phone3">
             <p-inputGroupAddon>
@@ -292,10 +292,30 @@
             الراتب الأساسي مطلوب
           </small>
         </div>
+
+
+         <!-- البدلات - حقل جديد -->
+    <div class="col-12 md:col-6 lg:col-4 mb-4">
+      <label class="block font-medium mb-2">البدلات</label>
+      <p-inputGroup>
+        <input 
+          pInputText 
+          formControlName="allowances" 
+          type="number" 
+          min="0" 
+          step="0.01" 
+          placeholder="أدخل قيمة البدلات"
+        >
+        <p-inputGroupAddon>
+          <i class="pi pi-plus-circle"></i>
+        </p-inputGroupAddon>
+      </p-inputGroup>
+      <small class="text-gray-500">البدلات الإضافية على الراتب الأساسي</small>
+    </div>
       
         <!-- نسبة السلفة -->
         <div class="col-12 md:col-6 lg:col-4 mb-4">
-          <label class="block font-medium mb-2">نسبة السلفة من الراتب *</label>
+          <label class="block font-medium mb-2">نسبة السلفة من الراتب المستحق *</label>
           <p-inputGroup>
             <input 
               pInputText 
@@ -314,6 +334,58 @@
             نسبة السلفة مطلوبة ويجب أن تكون بين 1 و 100
           </small>
         </div>
+
+
+         <!-- التأمينات - حقل جديد -->
+    <div class="col-12 md:col-6 lg:col-4 mb-4">
+      <label class="block font-medium mb-2">قيمة التأمينات</label>
+      <p-inputGroup>
+        <input 
+          pInputText 
+          formControlName="insurance_deduction" 
+          type="number" 
+          min="0" 
+          step="0.01" 
+          placeholder="أدخل قيمة التأمينات"
+        >
+        <p-inputGroupAddon>
+          <i class="pi pi-shield"></i>
+        </p-inputGroupAddon>
+      </p-inputGroup>
+      <small class="text-gray-500">قيمة استقطاع التأمينات الشهرية</small>
+    </div>
+
+
+     <!-- تاريخ بداية التأمينات - حقل جديد -->
+     <div class="col-12 md:col-6 lg:col-4 mb-4" *ngIf="employeeForm.get('insurance_deduction')?.value > 0" [@fadeInOut]>
+      <label class="block font-medium mb-2">تاريخ بداية التأمينات *</label>
+      <p-calendar 
+        formControlName="insurance_start_date"
+        styleClass="w-full"
+        dateFormat="dd/mm/yy"
+        placeholder="اختر تاريخ البداية"
+        [showIcon]="true">
+      </p-calendar>
+      <small class="text-red-500" *ngIf="isFieldInvalid('insurance_start_date')">
+        تاريخ بداية التأمينات مطلوب
+      </small>
+    </div>
+
+    <!-- تاريخ نهاية التأمينات - حقل جديد -->
+    <div class="col-12 md:col-6 lg:col-4 mb-4" *ngIf="employeeForm.get('insurance_deduction')?.value > 0" [@fadeInOut]>
+      <label class="block font-medium mb-2">تاريخ نهاية التأمينات *</label>
+      <p-calendar 
+        formControlName="insurance_end_date"
+        styleClass="w-full"
+        dateFormat="dd/mm/yy"
+        placeholder="اختر تاريخ النهاية"
+        [showIcon]="true">
+      </p-calendar>
+      <small class="text-red-500" *ngIf="isFieldInvalid('insurance_end_date')">
+        تاريخ نهاية التأمينات مطلوب
+      </small>
+    </div>
+    
       </div>
       
     </p-card>

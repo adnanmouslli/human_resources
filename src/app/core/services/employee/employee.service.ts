@@ -54,8 +54,9 @@ export class EmployeeService {
     );
   }
 
-  addEmployee(employee: Omit<Employee, 'id'>): Observable<Employee> {
-    return this.http.post<Employee>(this.apiEndpoint, employee).pipe(
+  addEmployee(formData: any): Observable<Employee> {
+
+    return this.http.post<Employee>(this.apiEndpoint, formData).pipe(
       tap(newEmployee => {
         const currentEmployees = this.employeesSubject.getValue();
         this.employeesSubject.next([...currentEmployees, newEmployee]);

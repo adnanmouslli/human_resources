@@ -155,3 +155,37 @@ export interface EmployeeStatistics {
     };
   };
 }
+
+// إضافة واجهة لتمثيل بيانات المستوى الواحد
+export interface QualityData {
+  grade: string;
+  quantity: number;
+  notes?: string;
+}
+
+// إضافة واجهة لتمثيل بيانات السجلات متعددة المستويات
+export interface MultiQualityRecord {
+  employee_id: number;
+  piece_id: number;
+  date: string;
+  quality_data: QualityData[];
+}
+
+// إضافة واجهة لتمثيل استجابة إضافة السجلات متعددة المستويات
+export interface MultiQualityResponse {
+  message: string;
+  data: {
+    employee_id: number;
+    employee_name: string;
+    piece_id: number;
+    piece_name: string;
+    date: string;
+    records: {
+      id: number;
+      quality_grade: string;
+      quantity: number;
+      notes?: string;
+    }[];
+    total_quantity: number;
+  };
+}

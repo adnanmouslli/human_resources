@@ -25,6 +25,11 @@ interface ProfessionStatus {
   value: string;
 }
 
+interface RateType {
+  label: string;
+  value: string;
+}
+
 @Component({
   selector: 'app-hours-professions',
   standalone: true,
@@ -44,7 +49,7 @@ interface ProfessionStatus {
     TagModule,
     LoadingComponent,
     ToolbarModule
-],
+  ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './hours-professions.component.html',
   styleUrl: './hours-professions.component.scss'
@@ -72,6 +77,16 @@ export class HoursProfessionsComponent implements OnInit {
     daily_rate: 0,
     // status: 'active'
   };
+
+  // Rate type options
+  rateTypeOptions: RateType[] = [
+    { label: 'قيمة الساعة فقط', value: 'hourly' },
+    { label: 'القيمة اليومية فقط', value: 'daily' },
+    { label: 'كلاهما', value: 'both' }
+  ];
+
+  // Selected rate type (hourly, daily, or both)
+  selectedRateType: string = 'both';
 
   // Status options for select button
   statusOptions: ProfessionStatus[] = [
@@ -102,6 +117,10 @@ export class HoursProfessionsComponent implements OnInit {
       daily_rate: 0,
       // status: 'active'
     };
+    
+    // Set default selected rate type
+    this.selectedRateType = 'both';
+    
     this.dialogHeader = 'إضافة مهنة جديدة';
     this.submitted = false;
     this.displayDialog = true;
@@ -109,6 +128,19 @@ export class HoursProfessionsComponent implements OnInit {
 
   editProfession(profession: Profession) {
     this.profession = { ...profession };
+    
+    // Set selected rate type based on existing values
+    if (profession.hourly_rate > 0 && profession.daily_rate > 0) {
+      this.selectedRateType = 'both';
+    } else if (profession.hourly_rate > 0) {
+      this.selectedRateType = 'hourly';
+    } else if (profession.daily_rate > 0) {
+      this.selectedRateType = 'daily';
+    } else {
+      // Fallback to both if none are set
+      this.selectedRateType = 'both';
+    }
+    
     this.dialogHeader = 'تعديل مهنة';
     this.displayDialog = true;
   }
@@ -122,6 +154,14 @@ export class HoursProfessionsComponent implements OnInit {
     this.submitted = true;
 
     if (this.validateForm()) {
+      // Set rates to 0 if not selected
+      if (!this.showHourlyRate()) {
+        this.profession.hourly_rate = 0;
+      }
+      if (!this.showDailyRate()) {
+        this.profession.daily_rate = 0;
+      }
+
       if (this.profession.id) {
         this.professionsService.updateProfession(this.profession.id, this.profession).subscribe({
           next: () => this.handleSaveSuccess('تم تحديث المهنة بنجاح'),
@@ -167,26 +207,49 @@ export class HoursProfessionsComponent implements OnInit {
     });
   }
 
+  // Helper methods to determine which fields to show
+  showHourlyRate(): boolean {
+    return this.selectedRateType === 'hourly' || this.selectedRateType === 'both';
+  }
+
+  showDailyRate(): boolean {
+    return this.selectedRateType === 'daily' || this.selectedRateType === 'both';
+  }
+
   getStatusSeverity(status: string): string {
     return status === 'active' ? 'success' : 'danger';
   }
 
   private validateForm(): boolean {
-    return !!(
-      this.profession.name &&
-      this.profession.hourly_rate &&
-      this.profession.daily_rate
-    );
+    // Validate name is required
+    if (!this.profession.name) {
+      return false;
+    }
+    
+    // Rate type must be selected
+    if (!this.selectedRateType) {
+      return false;
+    }
+    
+    // Validate hourly rate if hourly or both are selected
+    if (this.showHourlyRate() && !this.profession.hourly_rate) {
+      return false;
+    }
+    
+    // Validate daily rate if daily or both are selected
+    if (this.showDailyRate() && !this.profession.daily_rate) {
+      return false;
+    }
+    
+    return true;
   }
 
-
-  
   private handleSaveSuccess(message: string) {
     this.hideDialog();
-    this.toastService.success(message , "نجح");
+    this.toastService.success(message, "نجح");
   }
 
   private handleSaveError(error: any) {
-    this.toastService.error(error.message || 'حدث خطأ أثناء حفظ البيانات'  , "خطأ");
+    this.toastService.error(error.message || 'حدث خطأ أثناء حفظ البيانات', "خطأ");
   }
 }

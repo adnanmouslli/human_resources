@@ -36,7 +36,8 @@
         <th style="width: 50px">#</th>
         <th>رقم القطعة</th>
         <th>اسم القطعة</th>
-        <th style="width: 150px">الإجراءات</th>
+        <th style="width: 100px">الحالة</th>
+        <th style="width: 200px">الإجراءات</th>
       </tr>
     </ng-template>
 
@@ -45,6 +46,12 @@
         <td>{{i + 1}}</td>
         <td>{{piece.piece_number}}</td>
         <td>{{piece.piece_name}}</td>
+        <td>
+          <p-tag 
+            [severity]="getStatusSeverity(piece.is_active)" 
+            [value]="getStatusLabel(piece.is_active)">
+          </p-tag>
+        </td>
         <td>
           <div class="flex gap-2 justify-content-center">
             <p-button 
@@ -62,6 +69,13 @@
               (click)="editPiece(piece)">
             </p-button>
             <p-button 
+              [icon]="piece.is_active ? 'pi pi-power-off' : 'pi pi-check'"
+              [styleClass]="piece.is_active ? 'p-button-rounded p-button-danger p-button-text' : 'p-button-rounded p-button-success p-button-text'"
+              [pTooltip]="piece.is_active ? 'إيقاف' : 'تفعيل'"
+              tooltipPosition="top"
+              (click)="toggleActivation(piece, $event)">
+            </p-button>
+            <p-button 
               icon="pi pi-trash" 
               styleClass="p-button-rounded p-button-danger p-button-text"
               pTooltip="حذف"
@@ -75,7 +89,7 @@
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="4" class="text-center p-4">
+        <td colspan="5" class="text-center p-4">
           <div class="flex flex-column align-items-center">
             <i class="pi pi-inbox text-4xl text-500 mb-3"></i>
             <span class="text-700">لا توجد قطع مضافة</span>
@@ -103,6 +117,15 @@
             <div class="col-12 mb-3">
               <div class="text-500">رقم القطعة</div>
               <div class="text-900 text-xl">{{selectedPiece.piece_number}}</div>
+            </div>
+            <div class="col-12 mb-3">
+              <div class="text-500">الحالة</div>
+              <div class="text-900 flex align-items-center gap-2">
+                <p-tag 
+                  [severity]="getStatusSeverity(selectedPiece.is_active)" 
+                  [value]="getStatusLabel(selectedPiece.is_active)">
+                </p-tag>
+              </div>
             </div>
             <div class="col-12">
               <div class="text-500 mb-3">أسعار المستويات</div>
@@ -175,6 +198,16 @@
             [ngClass]="{'ng-invalid ng-dirty': submitted && !piece.piece_name}"
           />
           <small class="p-error" *ngIf="submitted && !piece.piece_name">اسم القطعة مطلوب</small>
+        </div>
+      </div>
+      
+      <div class="col-12">
+        <div class="field">
+          <label for="is_active" class="flex align-items-center gap-2">حالة القطعة</label>
+          <div class="flex align-items-center gap-2 mt-2">
+            <p-inputSwitch [(ngModel)]="piece.is_active"></p-inputSwitch>
+            <span>{{ piece.is_active ? 'مفعّلة' : 'متوقفة' }}</span>
+          </div>
         </div>
       </div>
 
