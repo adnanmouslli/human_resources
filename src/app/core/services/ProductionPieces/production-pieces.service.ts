@@ -17,8 +17,14 @@ export interface ProductionPiece {
   piece_number: string;
   piece_name: string;
   price_levels: PriceLevel;
+  is_active?: boolean;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface ListProductionPiece {
+  id: number;
+  piece_name: string; 
 }
 
 @Injectable({
@@ -111,6 +117,20 @@ export class ProductionPiecesService {
           throw error;
         },
         finalize: () => this.loadingSignal.set(false)
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  togglePieceActivation(id: number): Observable<any> {
+    this.loadingSignal.set(true);
+    return this.http.put(`${this.apiEndpoint}/${id}/toggle-activation`, {}).pipe(
+      tap((response: any) => {
+        // تحديث حالة القطعة في القائمة المحلية
+        this.piecesSignal.update(pieces => 
+          pieces.map(p => p.id === id ? { ...p, is_active: response.piece.is_active } : p)
+        );
+        this.loadingSignal.set(false);
       }),
       catchError(this.handleError)
     );

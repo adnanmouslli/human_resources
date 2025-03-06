@@ -161,6 +161,11 @@ selectedAttendanceTime: Date = new Date();
 employees: Employee[] = []; // قائمة الموظفين
 disableCheckInButton: boolean = false; // إضافة متغير لتعطيل الزر
 
+checkOutTime: Date = new Date();
+checkInTime: Date = new Date();
+checkInReason: string = '';
+checkOutReason: string = '';
+
 openAddAttendanceDialog() {
   const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd');
   this.selectedAttendanceTime = new Date(); // الوقت الافتراضي هو الآن
@@ -297,20 +302,39 @@ updateCurrentTime() {
 
 openCheckInDialog(record: any) {
   this.selectedRecord = record;
-  this.updateCurrentTime();
+  // تعيين الوقت الحالي كقيمة افتراضية
+  this.checkInTime = new Date();
+  // إعادة تعيين سبب الدخول
+  this.checkInReason = '';
   this.showCheckInDialog = true;
 }
-
 openCheckOutDialog(record: any) {
   this.selectedRecord = record;
-  this.updateCurrentTime();
+  // تعيين الوقت الحالي كقيمة افتراضية
+  this.checkOutTime = new Date();
+  // إعادة تعيين سبب الخروج
+  this.checkOutReason = '';
+  // تعيين إذا كان الموظف يعمل بنظام الإنتاجية
+  this.isProductivityBased = record?.employee?.work_system === 'production';
   this.showCheckOutDialog = true;
 }
 
+
+
+// تعديل دالة تأكيد الحضور
 confirmCheckIn() {
-  console.log(this.selectedRecord.employee.id);
   if (this.selectedRecord) {
-    this.attendanceService.checkIn(this.selectedRecord.employee.id).subscribe({
+    // تنسيق الوقت المختار إلى سلسلة نصية بتنسيق "HH:MM:SS"
+    const hours = this.checkInTime.getHours().toString().padStart(2, '0');
+    const minutes = this.checkInTime.getMinutes().toString().padStart(2, '0');
+    const seconds = this.checkInTime.getSeconds().toString().padStart(2, '0');
+    const formattedTime = `${hours}:${minutes}:${seconds}`;
+    
+    this.attendanceService.checkIn(
+      this.selectedRecord.employee.id, 
+      formattedTime,
+      this.checkInReason // إضافة سبب الدخول
+    ).subscribe({
       next: () => {
         this.showCheckInDialog = false;
         this.selectedRecord = null;
@@ -322,18 +346,23 @@ confirmCheckIn() {
 }
 
 confirmCheckOut() {
-  console.log(this.selectedRecord)
   if (this.selectedRecord) {
+    // تنسيق الوقت المختار إلى سلسلة نصية بتنسيق "HH:MM:SS"
+    const hours = this.checkOutTime.getHours().toString().padStart(2, '0');
+    const minutes = this.checkOutTime.getMinutes().toString().padStart(2, '0');
+    const seconds = this.checkOutTime.getSeconds().toString().padStart(2, '0');
+    const formattedTime = `${hours}:${minutes}:${seconds}`;
+    
     this.attendanceService.checkOut(
       this.selectedRecord.employee.id,
-      this.isProductivityBased ? this.productivityAmount : undefined
+      formattedTime, // وقت الانصراف المخصص
+      this.checkOutReason // إضافة سبب الخروج
     ).subscribe({
       next: () => {
         this.showCheckOutDialog = false;
         this.productivityAmount = 0;
         this.selectedRecord = null;
         this.loadAttendanceData();
-
       },
       error: (error) => console.error('Error checking out:', error)
     });
@@ -466,6 +495,72 @@ getCheckOutStatusLabel(status: string): string {
     'Recorded': 'مسجل'
   };
   return labels[status] || status;
+}
+
+
+// أضف هذه الدوال إلى ملف المكون TypeScript
+
+
+/**
+ * حساب المدة بين وقت الدخول والخروج
+ */
+calculateDuration(checkInTime: string, checkOutTime: string): string {
+  if (!checkInTime || !checkOutTime) return '-';
+  
+  // تحويل الأوقات إلى دقائق
+  const getTimeInMinutes = (timeStr: string): number => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+  
+  // حساب الفرق بالدقائق
+  let inMinutes = getTimeInMinutes(checkInTime);
+  let outMinutes = getTimeInMinutes(checkOutTime);
+  
+  // معالجة حالة الخروج في اليوم التالي
+  if (outMinutes < inMinutes) {
+    outMinutes += 24 * 60;
+  }
+  
+  const totalMinutes = outMinutes - inMinutes;
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  
+  // تنسيق الناتج بالعربية
+  return this.formatDurationText(hours, minutes);
+}
+
+/**
+ * تنسيق نص المدة بالعربية
+ */
+formatDurationText(hours: number, minutes: number): string {
+  let result = '';
+  
+  if (hours > 0) {
+    result += `${hours} ${this.pluralize(hours, 'ساعة', 'ساعتان', 'ساعات')}`;
+  }
+  
+  if (minutes > 0) {
+    if (result) result += ' و';
+    result += `${minutes} ${this.pluralize(minutes, 'دقيقة', 'دقيقتان', 'دقائق')}`;
+  }
+  
+  if (!result) {
+    result = 'أقل من دقيقة';
+  }
+  
+  return result;
+}
+
+/**
+ * صياغة الكلمات العربية حسب العدد (مفرد، مثنى، جمع)
+ */
+pluralize(number: number, singular: string, dual: string, plural: string): string {
+  if (number === 0) return plural;
+  if (number === 1) return singular;
+  if (number === 2) return dual;
+  if (number >= 3 && number <= 10) return plural;
+  return plural;
 }
 
 }

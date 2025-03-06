@@ -75,6 +75,34 @@ interface EmployeeSalary {
   system_details: any;
 }
 
+interface EmployeePayroll {
+  employee_id: number;
+  employee_name: string;
+  fingerprint_id: string;
+  system_type: string;
+  position: string;
+  salary_details: {
+    basic_salary: string;
+    allowances: string;
+    additions: string;
+    deductions: string;
+    net_salary: string;
+  };
+  calculation_date: string;
+  period: {
+    month: number;
+    year: number;
+  };
+  notes: string;
+  system_details?: any;
+  advances?: Array<{
+    date: string;
+    amount: string;
+    document_number: string;
+    notes: string;
+  }>;
+}
+
 interface PayrollFilter {
   month: number;
   year: number;
@@ -92,11 +120,21 @@ export class PayrollService {
   private payrollDataSignal = signal<PayrollCalculation | null>(null);
   private loadingSignal = signal<boolean>(false);
   private errorSignal = signal<string | null>(null);
+  
+  // Employee payroll signals
+  private employeePayrollSignal = signal<EmployeePayroll | null>(null);
+  private employeeLoadingSignal = signal<boolean>(false);
+  private employeeErrorSignal = signal<string | null>(null);
 
   // Computed values and public accessors
   public payrollData = computed(() => this.payrollDataSignal());
   public loading = computed(() => this.loadingSignal());
   public error = computed(() => this.errorSignal());
+  
+  // Employee payroll computed values
+  public employeePayroll = computed(() => this.employeePayrollSignal());
+  public employeeLoading = computed(() => this.employeeLoadingSignal());
+  public employeeError = computed(() => this.employeeErrorSignal());
 
   // Additional computed signals for easy access to statistics
   public generalStats = computed(() => this.payrollDataSignal()?.general_statistics);
@@ -122,6 +160,36 @@ export class PayrollService {
       }),
       catchError(this.handleError)
     );
+  }
+  
+  /**
+   * حساب راتب موظف محدد عن طريق الرقم التعريفي
+   * @param employeeId الرقم التعريفي للموظف
+   * @param params فلتر الشهر والسنة
+   * @returns بيانات راتب الموظف
+   */
+  calculateEmployeePayroll(employeeId: number, params: PayrollFilter): Observable<EmployeePayroll> {
+    this.employeeLoadingSignal.set(true);
+    this.employeeErrorSignal.set(null);
+    
+    return this.http.post<EmployeePayroll>(`${this.apiEndpoint}/employee/${employeeId}`, params).pipe(
+      tap({
+        next: (data) => {
+          this.employeePayrollSignal.set(data);
+        },
+        error: (error) => this.employeeErrorSignal.set(error.message),
+        finalize: () => this.employeeLoadingSignal.set(false)
+      }),
+      catchError(this.handleEmployeeError)
+    );
+  }
+  
+  /**
+   * إعادة تعيين بيانات راتب الموظف
+   */
+  resetEmployeePayroll(): void {
+    this.employeePayrollSignal.set(null);
+    this.employeeErrorSignal.set(null);
   }
 
   getEmployeesBySystem(systemType: 'monthly' | 'production' | 'shift' | 'hourly'): EmployeeSalary[] {
@@ -156,9 +224,22 @@ export class PayrollService {
       'monthly': 'نظام شهري',
       'production': 'نظام إنتاج',
       'shift': 'نظام ورديات',
-      'hourly': 'نظام ساعات'
+      'hourly': 'نظام ساعات',
+      'none': 'غير محدد'
     };
     return labels[systemType] || systemType;
+  }
+
+  // يمكن استخدام هذه الدالة للحصول على وصف مفصل للنظام
+  getSystemDescription(systemType: string): string {
+    const descriptions: { [key: string]: string } = {
+      'monthly': 'راتب شهري ثابت مع خصومات حسب الحضور والغياب',
+      'production': 'راتب حسب عدد القطع المنتجة ومستوى الجودة',
+      'shift': 'راتب حسب الورديات والساعات الإضافية',
+      'hourly': 'راتب بالساعة أو باليوم (يحسب الأعلى منهما)',
+      'none': 'لا يوجد نظام محدد'
+    };
+    return descriptions[systemType] || 'نظام غير معروف';
   }
 
   calculateTotalsByDepartment(): { [key: string]: { count: number; total: number } } {
@@ -205,6 +286,29 @@ export class PayrollService {
     }
 
     this.errorSignal.set(errorMessage);
+    return throwError(() => new Error(errorMessage));
+  }
+  
+  private handleEmployeeError = (error: HttpErrorResponse): Observable<never> => {
+    let errorMessage = 'حدث خطأ أثناء حساب راتب الموظف. الرجاء المحاولة مرة أخرى.';
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = `خطأ: ${error.error.message}`;
+    } else {
+      switch (error.status) {
+        case 400:
+          errorMessage = 'بيانات غير صحيحة - تأكد من صحة الشهر والسنة';
+          break;
+        case 404:
+          errorMessage = 'لم يتم العثور على الموظف المحدد';
+          break;
+        case 500:
+          errorMessage = 'خطأ في الخادم أثناء حساب الراتب. الرجاء المحاولة مرة أخرى لاحقاً.';
+          break;
+      }
+    }
+
+    this.employeeErrorSignal.set(errorMessage);
     return throwError(() => new Error(errorMessage));
   }
 }

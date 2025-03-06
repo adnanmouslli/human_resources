@@ -150,7 +150,7 @@ export class ProductionMonitorComponent implements OnInit {
 
   private loadPieces() {
     this.pieceService.getPieces().subscribe({
-      next: (pieces) => this.pieces = pieces,
+      next: (pieces) => this.pieces = pieces.filter(piece => piece.is_active === true),
       error: (err) => this.showError('خطأ في تحميل قائمة القطع', err.message)
     });
   }
@@ -257,18 +257,18 @@ loadEmployeeStats(employeeId: number) {
   });
 }
 
-  openNew() {
-    this.dialogMode = 'add';
-    this.recordModel = {
-      employee_id: 0,
-      piece_id: 0,
-      quantity: 0,
-      quality_grade: '',
-      date: new Date(),
-      notes: ''
-    };
-    this.displayDialog = true;
-  }
+  // openNew() {
+  //   this.dialogMode = 'add';
+  //   this.recordModel = {
+  //     employee_id: 0,
+  //     piece_id: 0,
+  //     quantity: 0,
+  //     quality_grade: '',
+  //     date: new Date(),
+  //     notes: ''
+  //   };
+  //   this.displayDialog = true;
+  // }
 
   openEdit(record: ProductionMonitoring) {
     this.dialogMode = 'edit';
@@ -312,7 +312,7 @@ loadEmployeeStats(employeeId: number) {
       const operation = this.dialogMode === 'add'
         ? this.monitoringService.addMonitoringRecord(recordData)
         : this.monitoringService.updateMonitoringRecord(this.selectedRecord!.id!, recordData);
-
+        
       operation.subscribe({
         next: () => {
           const message = this.dialogMode === 'add' ? 'تم إضافة السجل بنجاح' : 'تم تحديث السجل بنجاح';
@@ -622,5 +622,139 @@ private validatePieceEdit(): boolean {
       }
     });
   }
+
+  // إضافة متغير لقائمة مستويات الجودة في سجل جديد
+recordQualityList: QualityEditModel[] = [];
+
+// تعديل دالة openNew لإضافة مستوى جودة افتراضي واحد
+openNew() {
+  this.dialogMode = 'add';
+  this.recordModel = {
+    employee_id: 0,
+    piece_id: 0,
+    quantity: 0,
+    quality_grade: '',
+    date: new Date(),
+    notes: ''
+  };
+  
+  // إضافة مستوى جودة افتراضي واحد
+  this.recordQualityList = [{
+    grade: '',
+    quantity: 0,
+    notes: ''
+  }];
+  
+  this.displayDialog = true;
+}
+
+// دالة لإضافة مستوى جودة جديد في سجل جديد
+addQualityLevelToRecord() {
+  this.recordQualityList.push({
+    grade: '',
+    quantity: 0,
+    notes: ''
+  });
+}
+
+// دالة لإزالة مستوى جودة من سجل جديد
+removeRecordQualityLevel(index: number) {
+  if (this.recordQualityList.length > 1) {
+    this.recordQualityList.splice(index, 1);
+  }
+}
+
+// دالة للتحقق من عدم تكرار مستوى الجودة في سجل جديد
+onRecordQualityGradeChange(index: number) {
+  const currentGrade = this.recordQualityList[index].grade;
+  const duplicateIndex = this.recordQualityList.findIndex(
+    (q, i) => i !== index && q.grade === currentGrade
+  );
+
+  if (duplicateIndex !== -1) {
+    this.showError('خطأ', 'مستوى الجودة موجود مسبقاً');
+    this.recordQualityList[index].grade = '';
+  }
+}
+
+// دالة لحساب إجمالي الكمية في سجل جديد
+calculateRecordTotalQuantity(): number {
+  return this.recordQualityList.reduce((sum, quality) => sum + (quality.quantity || 0), 0);
+}
+
+// دالة جديدة لحفظ سجل متعدد المستويات
+saveMultiQualityRecord() {
+  if (!this.validateMultiQualityRecord()) {
+    return;
+  }
+
+  // تحويل البيانات من نموذج التحرير إلى النموذج المطلوب للخدمة متعددة المستويات
+  const qualityData = this.recordQualityList
+    .filter(quality => quality.quantity > 0 && quality.grade)
+    .map(quality => ({
+      grade: quality.grade,
+      quantity: quality.quantity,
+      notes: quality.notes || ''
+    }));
+
+  // إنشاء كائن السجل متعدد المستويات
+  const multiQualityRecord = {
+    employee_id: this.recordModel.employee_id,
+    piece_id: this.recordModel.piece_id,
+    date: this.recordModel.date.toISOString().split('T')[0],
+    quality_data: qualityData
+  };
+
+  // استخدام الخدمة الجديدة لإرسال البيانات
+  this.monitoringService.addMultiQualityRecord(multiQualityRecord).subscribe({
+    next: (response) => {
+      this.showSuccess('تم إضافة سجلات الإنتاج بنجاح');
+      this.displayDialog = false;
+      this.recordQualityList = [];
+      this.loadRecords();
+      this.loadStats();
+    },
+    error: (err) => {
+      this.showError('خطأ في إضافة السجلات', err.message || 'حدث خطأ أثناء معالجة البيانات');
+    }
+  });
+}
+
+// دالة للتحقق من صحة السجل متعدد المستويات
+validateMultiQualityRecord(): boolean {
+  if (this.recordModel.employee_id <= 0) {
+    this.showError('خطأ', 'الرجاء اختيار الموظف');
+    return false;
+  }
+
+  if (this.recordModel.piece_id <= 0) {
+    this.showError('خطأ', 'الرجاء اختيار القطعة');
+    return false;
+  }
+
+  if (!this.recordModel.date) {
+    this.showError('خطأ', 'الرجاء تحديد التاريخ');
+    return false;
+  }
+
+  // التحقق من وجود مستوى جودة واحد على الأقل بكمية صحيحة
+  const validQualityData = this.recordQualityList.filter(
+    quality => quality.grade && quality.quantity > 0
+  );
+
+  if (validQualityData.length === 0) {
+    this.showError('خطأ', 'الرجاء إدخال مستوى جودة واحد على الأقل بكمية أكبر من صفر');
+    return false;
+  }
+
+  // التحقق من عدم تكرار مستويات الجودة
+  const grades = validQualityData.map(q => q.grade);
+  if (new Set(grades).size !== grades.length) {
+    this.showError('خطأ', 'هناك مستويات جودة مكررة');
+    return false;
+  }
+
+  return true;
+}
 
 }

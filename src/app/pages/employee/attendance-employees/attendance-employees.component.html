@@ -58,7 +58,33 @@ header="تأكيد تسجيل الحضور">
   <i class="pi pi-clock text-4xl text-primary mb-3"></i>
   <h2 class="text-2xl font-bold mb-2">{{selectedRecord?.employee?.name}}</h2>
   <h3 class="text-xl mb-3">وقت الحضور</h3>
-  <div class="text-4xl font-bold text-primary mb-4">{{currentDateTime}}</div>
+  
+  <!-- عنصر اختيار الوقت -->
+  <div class="w-full mb-4">
+    <p-calendar 
+      [(ngModel)]="checkInTime" 
+      [timeOnly]="true" 
+      hourFormat="24"
+      [showTime]="true"
+      [showSeconds]="true"
+      inputId="checkin-time"
+      styleClass="w-full text-center text-xl">
+    </p-calendar>
+  </div>
+  
+  <!-- حقل سبب الدخول -->
+  <div class="w-full mb-4">
+    <label for="checkin-reason" class="block font-medium mb-2">سبب الدخول</label>
+    <textarea 
+      pInputTextarea 
+      [(ngModel)]="checkInReason" 
+      id="checkin-reason" 
+      rows="3" 
+      class="w-full" 
+      placeholder="أدخل سبب تسجيل الدخول في هذا الوقت (اختياري)">
+    </textarea>
+  </div>
+  
   <p class="text-center text-600 mb-4">
     هل تريد تأكيد تسجيل الحضور في هذا الوقت؟
   </p>
@@ -147,20 +173,50 @@ header="تسجيل الانصراف">
   <i class="pi pi-clock text-4xl text-primary mb-3"></i>
   <h2 class="text-2xl font-bold mb-2">{{selectedRecord?.employee?.name}}</h2>
   <h3 class="text-xl mb-3">وقت الانصراف</h3>
-  <div class="text-4xl font-bold text-primary mb-4">{{currentDateTime}}</div>
   
+  <!-- عنصر اختيار الوقت -->
+  <div class="w-full mb-4">
+    <p-calendar 
+      [(ngModel)]="checkOutTime" 
+      [timeOnly]="true" 
+      hourFormat="24"
+      [showTime]="true"
+      [showSeconds]="true"
+      inputId="checkout-time"
+      styleClass="w-full text-center text-xl">
+    </p-calendar>
+  </div>
+
+  <!-- إضافة حقل الإنتاجية إذا كان نظام الموظف هو نظام إنتاجية -->
   <div *ngIf="isProductivityBased" class="w-full mb-4">
-    <label class="block text-900 font-medium mb-2">كمية الإنتاج اليوم:</label>
+    <label for="productivity" class="block font-medium mb-2">كمية الإنتاج</label>
     <p-inputNumber 
-      [(ngModel)]="productivityAmount"
-      [showButtons]="true"
-      buttonLayout="horizontal"
-      spinnerMode="horizontal"
-      [min]="0"
+      [(ngModel)]="productivityAmount" 
+      inputId="productivity" 
+      [showButtons]="true" 
+      buttonLayout="horizontal" 
+      spinnerMode="horizontal" 
+      [min]="0" 
       [step]="1"
-      class="w-full"
-      placeholder="أدخل كمية الإنتاج">
+      decrementButtonClass="p-button-secondary" 
+      incrementButtonClass="p-button-secondary"
+      incrementButtonIcon="pi pi-plus" 
+      decrementButtonIcon="pi pi-minus"
+      styleClass="w-full">
     </p-inputNumber>
+  </div>
+  
+  <!-- حقل سبب الخروج -->
+  <div class="w-full mb-4">
+    <label for="checkout-reason" class="block font-medium mb-2">سبب الخروج</label>
+    <textarea 
+      pInputTextarea 
+      [(ngModel)]="checkOutReason" 
+      id="checkout-reason" 
+      rows="3" 
+      class="w-full" 
+      placeholder="أدخل سبب تسجيل الخروج في هذا الوقت (اختياري)">
+    </textarea>
   </div>
   
   <p class="text-center text-600 mb-4">
@@ -184,6 +240,7 @@ header="تسجيل الانصراف">
   </button>
 </ng-template>
 </p-dialog>
+
 
     <!-- رأس الصفحة -->
     <p-card>
@@ -460,28 +517,88 @@ header="تسجيل الانصراف">
             </div>
           </ng-container>
   
-          <!-- Attendance Periods -->
-          <div class="mt-4">
-            <h3 class="font-medium mb-3">
-              <i class="pi pi-list mr-2"></i>سجلات اليوم
-            </h3>
-            <div class="surface-100 border-round p-3">
-              <div *ngFor="let period of selectedRecord.attendancePeriods; let last = last" 
-                   class="mb-2">
-                <div class="flex justify-content-between align-items-center">
-                  <div class="flex align-items-center gap-2">
-                    <i class="pi pi-sign-in text-green-600"></i>
-                    <span class="font-medium">{{formatTime(period.checkInTime)}}</span>
+        <!-- Attendance Periods with Dark/Light Mode Support -->
+        <div class="mt-4">
+          <h3 class="font-medium mb-3 text-color">
+            <i class="pi pi-list mr-2"></i>سجلات اليوم
+          </h3>
+          <div class="surface-card border-round p-3 shadow-2">
+            <div *ngFor="let period of selectedRecord.attendancePeriods; let last = last; let i = index" 
+                class="mb-3 attendance-period-card">
+              <div class="card border-round shadow-1 p-3" [ngClass]="{'no-checkout': !period.checkOutTime}">
+                <!-- رقم الفترة ومعلومات الوقت -->
+                <div class="flex justify-content-between align-items-center mb-3">
+                  <span class="bg-primary border-round-xl p-2 px-3 text-0 text-xs font-bold">فترة {{i + 1}}</span>
+                  <span *ngIf="period.checkOutTime" class="duration-badge">
+                    <i class="pi pi-clock mr-1"></i>
+                    {{calculateDuration(period.checkInTime, period.checkOutTime)}}
+                  </span>
+                </div>
+                
+                <!-- رأس البطاقة مع الأوقات -->
+                <div class="grid border-bottom-1 surface-border pb-3">
+                  <!-- وقت الدخول -->
+                  <div class="col-6 flex align-items-center">
+                    <div class="time-indicator checkin">
+                      <i class="pi pi-sign-in"></i>
+                    </div>
+                    <div class="ml-2">
+                      <div class="text-sm">دخول</div>
+                      <div class="text-xl font-bold text-color">{{formatTime(period.checkInTime)}}</div>
+                    </div>
                   </div>
-                  <div class="flex align-items-center gap-2">
-                    <i class="pi pi-sign-out text-red-600"></i>
-                    <span class="font-medium">{{period.checkOutTime ? formatTime(period.checkOutTime) : '---'}}</span>
+                  
+                  <!-- وقت الخروج -->
+                  <div class="col-6 flex align-items-center justify-content-end">
+                    <div class="mr-2 text-right">
+                      <div class="text-sm">خروج</div>
+                      <div class="text-xl font-bold" [ngClass]="period.checkOutTime ? 'text-color' : 'text-500'">
+                        {{period.checkOutTime ? formatTime(period.checkOutTime) : 'لم يسجل'}}
+                      </div>
+                    </div>
+                    <div class="time-indicator checkout" [ngClass]="{'inactive': !period.checkOutTime}">
+                      <i class="pi pi-sign-out"></i>
+                    </div>
                   </div>
                 </div>
-                <hr class="my-2 surface-200" *ngIf="!last" />
+                
+                <!-- الأسباب -->
+                <div class="pt-3">
+                  <div class="mb-3">
+                    <div class="reason-header">
+                      <i class="pi pi-sign-in text-green-500 mr-2"></i>
+                      <span class="text-color font-medium">سبب الدخول</span>
+                    </div>
+                    <div class="reason-box" [ngClass]="{'empty-reason': !period.checkInReason}">
+                      {{period.checkInReason || 'لم يتم تسجيل سبب للدخول'}}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div class="reason-header">
+                      <i class="pi pi-sign-out text-red-500 mr-2"></i>
+                      <span class="text-color font-medium">سبب الخروج</span>
+                    </div>
+                    <div class="reason-box" [ngClass]="{'empty-reason': !period.checkOutReason, 'not-available': !period.checkOutTime}">
+                      <span *ngIf="period.checkOutTime">{{period.checkOutReason || 'لم يتم تسجيل سبب للخروج'}}</span>
+                      <span *ngIf="!period.checkOutTime">لم يتم تسجيل الخروج بعد</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- رسالة في حالة عدم وجود سجلات -->
+            <div *ngIf="!selectedRecord.attendancePeriods || selectedRecord.attendancePeriods.length === 0" 
+                class="p-5 text-center">
+              <div class="empty-state">
+                <i class="pi pi-calendar-times empty-icon mb-3"></i>
+                <div class="empty-text">لا توجد سجلات دخول وخروج لهذا اليوم</div>
               </div>
             </div>
           </div>
+        </div>
+
         </p-tabPanel>
   
         <!-- Employee Info Tab -->

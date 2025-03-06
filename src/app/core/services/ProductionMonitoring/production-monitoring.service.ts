@@ -2,7 +2,7 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, catchError, tap, throwError } from 'rxjs';
 import { ConfigService } from '../../../core/services/config.service';
-import { DailyStatistics, EmployeeStatistics, MonitoringFilter, ProductionMonitoring } from '../../../type/production-monitor';
+import { DailyStatistics, EmployeeStatistics, MonitoringFilter, MultiQualityRecord, MultiQualityResponse, ProductionMonitoring } from '../../../type/production-monitor';
 
 
 
@@ -50,6 +50,50 @@ export class ProductionMonitoringService {
         next: (records) => {
           this.monitoringRecordsSignal.set(records);
           this.errorSignal.set(null);
+        },
+        error: (error) => this.errorSignal.set(error.message),
+        finalize: () => this.loadingSignal.set(false)
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+   // الدالة الجديدة لإضافة سجلات متعددة المستويات
+   addMultiQualityRecord(record: MultiQualityRecord): Observable<MultiQualityResponse> {
+    this.loadingSignal.set(true);
+
+    return this.http.post<MultiQualityResponse>(`${this.apiEndpoint}/multi-quality`, record).pipe(
+      tap({
+        next: (response) => {
+          // تحديث السجلات المحلية (اختياري، يمكنك أيضًا إعادة تحميل البيانات بدلاً من ذلك)
+          this.errorSignal.set(null);
+          
+          // يمكن إعادة تحميل السجلات لضمان التزامن مع قاعدة البيانات
+          // الخيار الأول: إعادة تحميل السجلات 
+          // this.getMonitoringRecords().subscribe();
+          
+          // الخيار الثاني: إضافة السجلات الجديدة إلى السجلات الحالية
+          if (response.data.records && response.data.records.length > 0) {
+            const currentRecords = this.monitoringRecordsSignal();
+            const newRecords: ProductionMonitoring[] = response.data.records.map(record => ({
+              id: record.id,
+              employee: {
+                id: response.data.employee_id,
+                name: response.data.employee_name
+              },
+              piece: {
+                id: response.data.piece_id,
+                name: response.data.piece_name
+              },
+              quantity: record.quantity,
+              quality_grade: record.quality_grade as "A" | "B" | "C" | "D" | "E",
+              date: response.data.date,
+              notes: record.notes || '',
+              created_at: new Date().toISOString()
+            }));
+            
+            this.monitoringRecordsSignal.set([...currentRecords, ...newRecords]);
+          }
         },
         error: (error) => this.errorSignal.set(error.message),
         finalize: () => this.loadingSignal.set(false)

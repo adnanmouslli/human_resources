@@ -1,0 +1,50 @@
+// /* أضف هذه الأنماط إلى ملف CSS الخاص بالمكون */
+
+// .attendance-period-card {
+//     transition: all 0.2s ease;
+//   }
+  
+//   .attendance-period-card:hover {
+//     transform: translateY(-3px);
+//   }
+  
+//   .attendance-period-card .card {
+//     border-right: 4px solid #22c55e;
+//     transition: box-shadow 0.3s ease;
+//   }
+  
+//   .attendance-period-card .card:hover {
+//     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+//   }
+  
+//   /* للسجلات التي ليس لها تسجيل خروج */
+//   .attendance-period-card .card.no-checkout {
+//     border-right-color: #f97316;
+//   }
+  
+//   /* يمكنك إضافة هذا الكود في المكون للتمييز بين السجلات المكتملة وغير المكتملة:
+//   [class.no-checkout]="!period.checkOutTime"
+//   */
+  
+//   /* تنسيق النص داخل مربعات الأسباب */
+//   .text-sm {
+//     font-size: 0.875rem;
+//     line-height: 1.4;
+//     word-break: break-word;
+//   }
+  
+//   /* تأثيرات للأيقونات */
+//   .pi-sign-in, .pi-sign-out, .pi-info-circle, .pi-clock {
+//     animation: fadeIn 0.5s ease-in;
+//   }
+  
+//   @keyframes fadeIn {
+//     from {
+//       opacity: 0;
+//       transform: translateY(-5px);
+//     }
+//     to {
+//       opacity: 1;
+//       transform: translateY(0);
+//     }
+//   }

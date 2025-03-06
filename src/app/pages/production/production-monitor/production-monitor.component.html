@@ -443,176 +443,147 @@
     </ng-template>
 </p-table>
 
-<!-- 
-  <p-table [value]="records()" 
-           [paginator]="true" 
-           [rows]="10"
-           [showCurrentPageReport]="true"
-           [tableStyle]="{ 'min-width': '50rem' }"
-           [loading]="loading()"
-           styleClass="p-datatable-striped"
-           currentPageReportTemplate="إجمالي السجلات: {totalRecords}"
-           [rowsPerPageOptions]="[10,25,50]">
-    
-    <ng-template pTemplate="header">
-      <tr>
-        <th>الموظف</th>
-        <th>القطعة</th>
-        <th>الكمية</th>
-        <th>الجودة</th>
-        <th>التاريخ</th>
-        <th>ملاحظات</th>
-        <th>الإجراءات</th>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="body" let-record>
-      <tr>
-        <td>
-          {{ record.employee?.name }}
-        </td>
-        <td>{{ record.piece?.name }}</td>
-        <td>{{ record.quantity }}</td>
-        <td>
-          <p-tag [severity]="getQualityTag(record.quality_grade).severity" 
-                 [value]="getQualityTag(record.quality_grade).value">
-          </p-tag>
-        </td>
-        <td>{{ record.date | date:'yyyy-MM-dd' }}</td>
-        <td>{{ record.notes }}</td>
-        <td>
-          <div class="flex gap-2">
-            <button pButton 
-                  icon="pi pi-chart-line" 
-                  class="p-button-rounded p-button-info p-button-text"
-                  (click)="showEmployeeStats(record.employee , record.date)"
-                  [disabled]="loading()"
-                  pTooltip="إحصائيات"></button>
-
-            <button pButton 
-                    icon="pi pi-pencil" 
-                    class="p-button-rounded p-button-success p-button-text"
-                    (click)="openEdit(record)"
-                    [disabled]="loading()"
-                    pTooltip="تعديل"></button>
-            <button pButton 
-                    icon="pi pi-trash" 
-                    class="p-button-rounded p-button-danger p-button-text"
-                    (click)="deleteRecord(record)"
-                    [disabled]="loading()"
-                    pTooltip="حذف"></button>
-          </div>
-        </td>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="emptymessage">
-      <tr>
-        <td colspan="7" class="text-center p-4">لا توجد سجلات</td>
-      </tr>
-    </ng-template>
-  </p-table> -->
 
 
-  <!-- Add/Edit Dialog -->
+
+  <!-- Add Dialog -->
   <p-dialog [(visible)]="displayDialog" 
-            [style]="{ width: '450px' }" 
-            [header]="dialogMode === 'add' ? 'إضافة سجل جديد' : 'تعديل السجل'"
-            [modal]="true"
-            styleClass="p-fluid">
+  [style]="{ width: '600px' }" 
+  [header]="dialogMode === 'add' ? 'إضافة سجل جديد' : 'تعديل السجل'"
+  [modal]="true"
+  styleClass="p-fluid">
 
-    <div class="grid">
-      <div class="col-12">
-        <div class="field">
-          <label for="employee">الموظف*</label>
-          <p-dropdown [options]="employees" 
-                     [(ngModel)]="recordModel.employee_id"
-                     optionLabel="full_name"
-                     optionValue="id"
-                     placeholder="اختر الموظف"
-                     [filter]="true"
-                     filterBy="full_name"
-                     [showClear]="true"
-                     inputId="employee"></p-dropdown>
-        </div>
-      </div>
+  <div class="grid" *ngIf="recordModel">
+  <!-- معلومات أساسية -->
+  <div class="col-12">
+  <div class="field">
+  <label for="employee">الموظف*</label>
+  <p-dropdown [options]="employees" 
+          [(ngModel)]="recordModel.employee_id"
+          optionLabel="full_name"
+          optionValue="id"
+          placeholder="اختر الموظف"
+          [filter]="true"
+          filterBy="full_name"
+          [showClear]="true"
+          inputId="employee"></p-dropdown>
+  </div>
+  </div>
 
-      <div class="col-12">
-        <div class="field">
-          <label for="piece">القطعة*</label>
-          <p-dropdown [options]="pieces" 
-                     [(ngModel)]="recordModel.piece_id"
-                     optionLabel="piece_name"
-                     optionValue="id"
-                     placeholder="اختر القطعة"
-                     [filter]="true"
-                     filterBy="piece_name"
-                     [showClear]="true"
-                     inputId="piece"></p-dropdown>
-        </div>
-      </div>
+  <div class="col-12">
+  <div class="field">
+  <label for="piece">القطعة*</label>
+  <p-dropdown [options]="pieces" 
+          [(ngModel)]="recordModel.piece_id"
+          optionLabel="piece_name"
+          optionValue="id"
+          placeholder="اختر القطعة"
+          [filter]="true"
+          filterBy="piece_name"
+          [showClear]="true"
+          inputId="piece"></p-dropdown>
+  </div>
+  </div>
 
-      <div class="col-12">
-        <div class="field">
-          <label for="quantity">الكمية*</label>
-          <p-inputNumber [(ngModel)]="recordModel.quantity" 
-                       [min]="0" 
-                       [showButtons]="true"
-                       buttonLayout="horizontal"
-                       spinnerMode="horizontal"
-                       inputId="quantity"
-                       [step]="1"></p-inputNumber>
-        </div>
-      </div>
+  <div class="col-12">
+  <div class="field">
+  <label for="date">التاريخ*</label>
+  <p-calendar [(ngModel)]="recordModel.date" 
+          [showIcon]="true"
+          dateFormat="yy-mm-dd"
+          inputId="date"></p-calendar>
+  </div>
+  </div>
 
-      <div class="col-12">
-        <div class="field">
-          <label for="quality">مستوى الجودة*</label>
-          <p-dropdown [options]="qualityGrades" 
-                     [(ngModel)]="recordModel.quality_grade"
-                     placeholder="اختر مستوى الجودة"
-                     inputId="quality"></p-dropdown>
-        </div>
-      </div>
+  <!-- تفاصيل الجودة -->
+  <div class="col-12">
+  <div class="surface-50 border-round p-3 mb-2">
+  <div class="flex align-items-center justify-content-between mb-3">
+  <div class="flex align-items-center gap-2">
+    <i class="pi pi-star text-primary"></i>
+    <span class="font-bold">تفاصيل الجودة</span>
+  </div>
+  <button pButton
+          icon="pi pi-plus"
+          label="إضافة مستوى جودة"
+          class="p-button-outlined p-button-sm"
+          (click)="addQualityLevelToRecord()">
+  </button>
+  </div>
 
-      <div class="col-12">
-        <div class="field">
-          <label for="date">التاريخ*</label>
-          <p-calendar [(ngModel)]="recordModel.date" 
-                     [showIcon]="true"
-                     dateFormat="yy-mm-dd"
-                     inputId="date"></p-calendar>
-        </div>
-      </div>
+  <div class="grid">
+  <div class="col-12 mb-2" *ngFor="let quality of recordQualityList; let i = index">
+    <div class="flex align-items-center gap-3 surface-100 p-3 border-round">
+      <!-- اختيار مستوى الجودة -->
+      <p-dropdown [options]="qualityGrades"
+                [(ngModel)]="quality.grade"
+                optionLabel="label"
+                optionValue="value"
+                [style]="{'width': '150px'}"
+                (onChange)="onRecordQualityGradeChange(i)">
+      </p-dropdown>
 
-      <div class="col-12">
-        <div class="field">
-          <label for="notes">ملاحظات</label>
-          <textarea pInputTextarea 
-                    [(ngModel)]="recordModel.notes" 
-                    rows="3" 
-                    placeholder="أدخل الملاحظات هنا"
-                    inputId="notes"></textarea>
-        </div>
-      </div>
+      <!-- إدخال الكمية -->
+      <p-inputNumber [(ngModel)]="quality.quantity"
+                  [min]="0"
+                  [showButtons]="true"
+                  buttonLayout="horizontal"
+                  spinnerMode="horizontal"
+                  [inputStyle]="{'width': '120px'}"
+                  placeholder="الكمية"
+                  [step]="1">
+      </p-inputNumber>
+
+      <!-- زر الحذف -->
+      <button pButton
+              icon="pi pi-trash"
+              class="p-button-danger p-button-text p-button-rounded"
+              (click)="removeRecordQualityLevel(i)"
+              [disabled]="recordQualityList.length === 1">
+      </button>
     </div>
 
-    <ng-template pTemplate="footer">
-      <button pButton 
-              label="حفظ" 
-              icon="pi pi-check" 
-              class="p-button-success" 
-              (click)="saveRecord()"
-              [disabled]="loading()"></button>
-      <button pButton 
-              label="إلغاء" 
-              icon="pi pi-times" 
-              class="p-button-secondary" 
-              (click)="displayDialog = false"
-              [disabled]="loading()"></button>
-    </ng-template>
-  </p-dialog>
+    <div class="w-full mt-2">
+      <textarea pInputTextarea 
+              [(ngModel)]="quality.notes"
+              rows="2"
+              placeholder="ملاحظات"
+              class="w-full">
+      </textarea>
+    </div>
+  </div>
+  </div>
+  </div>
+  </div>
 
+  <!-- إجمالي الكمية -->
+  <div class="col-12">
+  <div class="surface-card border-round p-3">
+  <div class="flex justify-content-between align-items-center">
+  <span class="font-bold">إجمالي الكمية:</span>
+  <span class="text-xl text-primary font-bold">
+    {{ calculateRecordTotalQuantity() }}
+  </span>
+  </div>
+  </div>
+  </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+  <button pButton 
+    label="حفظ" 
+    icon="pi pi-check" 
+    class="p-button-success" 
+    (click)="saveMultiQualityRecord()"
+    [disabled]="loading()"></button>
+  <button pButton 
+    label="إلغاء" 
+    icon="pi pi-times" 
+    class="p-button-secondary" 
+    (click)="displayDialog = false"
+    [disabled]="loading()"></button>
+  </ng-template>
+  </p-dialog>
 
   <!-- Piece Edit Dialog -->
   <p-dialog [(visible)]="displayPieceEditDialog"

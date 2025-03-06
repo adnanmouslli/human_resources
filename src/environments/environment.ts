@@ -6,7 +6,7 @@ import { baseEnvironment } from './environment.base';
 export const environment: Environment = {
   ...baseEnvironment,
   production: false,
-  // apiBaseUrl: 'http://192.168.1.14:3000',
+  // apiBaseUrl: 'http://62.171.153.198:4000',
   apiBaseUrl: 'http://localhost:3000/api',
   apiEndpoints: {
     auth: '/auth',

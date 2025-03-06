@@ -73,6 +73,18 @@ export class AddEmployeeComponent implements OnInit {
   private jobTitleService = inject(JobTitleService);
   private professionService = inject(ProfessionsService); // إضافة خدمة المهن
 
+  @ViewChild('fileInput') fileInput!: ElementRef;
+  selectedFile: File | null = null;
+  selectedFileName: string = '';
+
+  // أضف هذه الدالة في الكلاس
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFile = input.files[0];
+      this.selectedFileName = this.selectedFile.name;
+    }
+  }
   
   private readonly WORK_SYSTEM_MAPPINGS: { [key: string]: any } = {
     'Production System': { label: 'نظام انتاجية', value: 'productivity', icon: 'pi pi-chart-line' },
@@ -280,7 +292,12 @@ export class AddEmployeeComponent implements OnInit {
       phone3: [''],
       agreement: ['Standard'],
       notes: [''],
-      shift_id: ['']
+      shift_id: [''],
+
+      allowances: [0],
+      insurance_deduction: [0],
+      insurance_start_date: [null],
+      insurance_end_date: [null],
     });
 
     // مراقبة تغييرات نوع الموظف
@@ -294,12 +311,21 @@ export class AddEmployeeComponent implements OnInit {
     const positionControl = this.employeeForm.get('position');
     const professionControl = this.employeeForm.get('profession');
     const advancePercentageControl = this.employeeForm.get('advancePercentage');
+    const allowancesControl = this.employeeForm.get('allowances');
+    const insuranceDeductionControl = this.employeeForm.get('insurance_deduction');
+    const insuranceStartDateControl = this.employeeForm.get('insurance_start_date');
+    const insuranceEndDateControl = this.employeeForm.get('insurance_end_date');
 
     // إعادة تعيين كل الvalidators
     salaryControl?.clearValidators();
     positionControl?.clearValidators();
     professionControl?.clearValidators();
     advancePercentageControl?.clearValidators();
+    allowancesControl?.clearValidators();
+    insuranceDeductionControl?.clearValidators();
+    insuranceStartDateControl?.clearValidators();
+    insuranceEndDateControl?.clearValidators();
+    
 
     if (employeeType === 'permanent') {
       // الحقول المطلوبة للموظف الدائم
@@ -310,6 +336,19 @@ export class AddEmployeeComponent implements OnInit {
         Validators.min(1),
         Validators.max(100)
       ]);
+
+      // في حالة إضافة تأمينات، تصبح تواريخ الصلاحية مطلوبة
+    insuranceDeductionControl?.valueChanges.subscribe(value => {
+      if (value && value > 0) {
+        insuranceStartDateControl?.setValidators([Validators.required]);
+        insuranceEndDateControl?.setValidators([Validators.required]);
+      } else {
+        insuranceStartDateControl?.clearValidators();
+        insuranceEndDateControl?.clearValidators();
+      }
+      insuranceStartDateControl?.updateValueAndValidity();
+      insuranceEndDateControl?.updateValueAndValidity();
+    });
       
       // إفراغ حقل المهنة
       professionControl?.setValue('');
@@ -327,6 +366,10 @@ export class AddEmployeeComponent implements OnInit {
     positionControl?.updateValueAndValidity();
     professionControl?.updateValueAndValidity();
     advancePercentageControl?.updateValueAndValidity();
+    allowancesControl?.updateValueAndValidity();
+    insuranceDeductionControl?.updateValueAndValidity();
+    insuranceStartDateControl?.updateValueAndValidity();
+    insuranceEndDateControl?.updateValueAndValidity();
 
     // إعادة تعيين قيم أخرى عند تغيير نوع الموظف
     this.employeeForm.patchValue({
@@ -352,10 +395,25 @@ export class AddEmployeeComponent implements OnInit {
   onSubmit() {
     if (this.employeeForm.valid) {
       this.loading = true;
-      const formattedData = this.formatEmployeeData(this.employeeForm.value);
+      // إنشاء FormData لإرسال البيانات والملف
+      const formData = new FormData();
+      const employeeData = this.formatEmployeeData(this.employeeForm.value);
+      
+      // إضافة جميع حقول البيانات إلى FormData
+      Object.keys(employeeData).forEach(key => {
+        // تتجاهل القيم الفارغة للتواريخ
+        if (employeeData[key] !== null && key !== 'certificates') {
+          formData.append(key, employeeData[key]);
+        }
+      });
+      
+      // إضافة ملف الشهادة إذا تم اختياره
+      if (this.selectedFile) {
+        formData.append('certificates', this.selectedFile);
+      }
+  
 
-      console.log("formattedData" , formattedData)
-      this.employeeService.addEmployee(formattedData).subscribe({
+      this.employeeService.addEmployee(formData).subscribe({
         next: (response: any) => {
           this.messageService.add({
             severity: 'success',
@@ -388,29 +446,41 @@ export class AddEmployeeComponent implements OnInit {
   private formatEmployeeData(formData: any): any {
     return {
       employee_type: formData.employee_type,
-
+  
       ...(formData.employee_type === 'permanent' 
         ? { position: formData.position }
         : { profession: formData.profession }
       ),
-
+  
       fingerprint_id: formData.fingerprint_id,
       full_name: formData.full_name,
       salary: Number(formData.salary),
-      advancePercentage: formData.advancePercentage,  // إضافة نسبة السلفة
+
+      // إضافة البدلات
+      allowances: Number(formData.allowances || 0),
+      // إضافة التأمينات
+      insurance_deduction: Number(formData.insurance_deduction || 0),
+      // تواريخ صلاحية التأمينات
+      insurance_start_date: formData.insurance_start_date ? this.formatDate(formData.insurance_start_date) : null,
+      insurance_end_date: formData.insurance_end_date ? this.formatDate(formData.insurance_end_date) : null,
+    
+
+      advancePercentage: formData.advancePercentage,
       work_system: formData.work_system,
       shift_id: formData.shift_id || null,
-      certificates: formData.certificates || '',
-      birth_date: formData.birth_date ? this.formatDate(formData.birth_date) : null,
-      birth_place: formData.birth_place || '',
+      // لن نضيف الشهادة هنا لأننا سنضيفها كملف منفصل في FormData
+      // birth_date نرسلها كتاريخ صحيح أو كقيمة null
+      date_of_birth: formData.birth_date ? this.formatDate(formData.birth_date) : null,
+      place_of_birth: formData.birth_place || '',
       id_number: formData.id_number || '',
       national_id: formData.national_id,
       residence: formData.residence || '',
-      phone1: formData.phone1 || '',
-      phone2: formData.phone2 || '',
-      phone3: formData.phone3 || '',
+      mobile_1: formData.phone1 || '',  
+      mobile_2: formData.phone2 || '',  
+      mobile_3: formData.phone3 || '',  
       agreement: formData.agreement || 'Standard',
-      notes: formData.notes || ''
+      notes: formData.notes || '',
+      date_of_joining: formData.date_of_joining ? this.formatDate(formData.date_of_joining) : null
     };
   }
   
@@ -443,5 +513,12 @@ export class AddEmployeeComponent implements OnInit {
       work_system: '',
       agreement: 'Standard'
     });
+    
+    // إعادة تعيين ملف الشهادة
+    this.selectedFile = null;
+    this.selectedFileName = '';
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
+    }
   }
 }
